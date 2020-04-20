@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <packaging>maven-plugin</packaging>
+    <groupId>com.github.carlkuesters</groupId>
+    <artifactId>swagger-maven-plugin</artifactId>
+    <version>0.0.1</version>
+
+    <name>Swagger Maven Plugin</name>
+    <description>Generates a Swagger file out of sourcecode.</description>
+    <url>https://github.com/carlkuesters/swagger-maven-plugin</url>
+
+    <properties>
+        <version.jackson>2.8.9</version.jackson>
+        <version.jaxb>2.3.1</version.jaxb>
+        <version.jaxrs>2.0.1</version.jaxrs>
+        <version.jersey>1.13</version.jersey>
+        <version.lombok>1.18.8</version.lombok>
+        <version.maven-plugin-api>2.2.1</version.maven-plugin-api>
+        <version.maven-plugin-annotations>3.3</version.maven-plugin-annotations>
+        <version.maven-plugin-plugin>3.6.0</version.maven-plugin-plugin>
+        <version.maven-compiler-plugin>3.8.1</version.maven-compiler-plugin>
+        <version.spring>4.3.7.RELEASE</version.spring>
+        <version.swagger>1.5.21</version.swagger>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-plugin-plugin</artifactId>
+                <version>${version.maven-plugin-plugin}</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${version.maven-compiler-plugin}</version>
+                <configuration>
+                    <source>8</source>
+                    <target>8</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <!--Needed to support Java 11, not included by default in Java anymore-->
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>${version.jaxb}</version>
+        </dependency>
+        <!--Maven Plugin-->
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-plugin-api</artifactId>
+            <version>${version.maven-plugin-api}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-project</artifactId>
+            <version>${version.maven-plugin-api}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven.plugin-tools</groupId>
+            <artifactId>maven-plugin-annotations</artifactId>
+            <version>${version.maven-plugin-annotations}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!--Swagger-->
+        <dependency>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-jersey-jaxrs</artifactId>
+            <version>${version.swagger}</version>
+        </dependency>
+        <!--JaxRS-->
+        <dependency>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>javax.ws.rs-api</artifactId>
+            <version>${version.jaxrs}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-server</artifactId>
+            <version>${version.jersey}</version>
+        </dependency>
+        <!--Spring-->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <version>${version.spring}</version>
+        </dependency>
+        <!--Jackson, needed for JSON export-->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>${version.jackson}</version>
+        </dependency>
+        <!--Lombok-->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${version.lombok}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+</project>

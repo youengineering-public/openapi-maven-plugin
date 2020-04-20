@@ -1,0 +1,12 @@
+# Intellij
+.idea/*
+!.idea/inspectionProfiles
+!.idea/runConfigurations
+*.iml
+*.iws
+
+# Mac
+.DS_Store
+
+# Maven
+target/
