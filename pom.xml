@@ -2,14 +2,37 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <packaging>maven-plugin</packaging>
     <groupId>com.github.carlkuesters</groupId>
     <artifactId>swagger-maven-plugin</artifactId>
     <version>0.0.1</version>
+    <packaging>maven-plugin</packaging>
 
     <name>Swagger Maven Plugin</name>
     <description>Generates a Swagger file out of sourcecode.</description>
     <url>https://github.com/carlkuesters/swagger-maven-plugin</url>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Carl Küsters</name>
+            <email>carl.kuesters@youengineering.com</email>
+            <organization>youEngineering AG</organization>
+            <organizationUrl>https://youengineering.com</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/carlkuesters/swagger-maven-plugin.git</connection>
+        <developerConnection>scm:git:ssh://github.com:carlkuesters/swagger-maven-plugin.git</developerConnection>
+        <url>http://github.com/carlkuesters/swagger-maven-plugin/tree/master</url>
+    </scm>
 
     <properties>
         <version.jackson>2.8.9</version.jackson>
@@ -17,10 +40,14 @@
         <version.jaxrs>2.0.1</version.jaxrs>
         <version.jersey>1.13</version.jersey>
         <version.lombok>1.18.8</version.lombok>
-        <version.maven-plugin-api>2.2.1</version.maven-plugin-api>
-        <version.maven-plugin-annotations>3.3</version.maven-plugin-annotations>
-        <version.maven-plugin-plugin>3.6.0</version.maven-plugin-plugin>
         <version.maven-compiler-plugin>3.8.1</version.maven-compiler-plugin>
+        <version.maven-gpg-plugin>1.5</version.maven-gpg-plugin>
+        <version.maven-javadoc-plugin>2.9.1</version.maven-javadoc-plugin>
+        <version.maven-plugin-annotations>3.3</version.maven-plugin-annotations>
+        <version.maven-plugin-api>2.2.1</version.maven-plugin-api>
+        <version.maven-plugin-plugin>3.6.0</version.maven-plugin-plugin>
+        <version.maven-source-plugin>2.2.1</version.maven-source-plugin>
+        <version.nexus-staging-maven-plugin>1.6.7</version.nexus-staging-maven-plugin>
         <version.spring>4.3.7.RELEASE</version.spring>
         <version.swagger>1.5.21</version.swagger>
     </properties>
@@ -39,6 +66,61 @@
                 <configuration>
                     <source>8</source>
                     <target>8</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>${version.maven-source-plugin}</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${version.maven-javadoc-plugin}</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>${version.maven-gpg-plugin}</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                        <configuration>
+                            <executable>gpg2</executable>
+                            <useAgent>true</useAgent>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>${version.nexus-staging-maven-plugin}</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://oss.sonatype.org</nexusUrl>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
                 </configuration>
             </plugin>
         </plugins>
