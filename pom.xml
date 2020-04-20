@@ -4,7 +4,7 @@
 
     <groupId>com.github.carlkuesters</groupId>
     <artifactId>swagger-maven-plugin</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
     <name>Swagger Maven Plugin</name>
@@ -167,6 +167,9 @@
                         <goals>
                             <goal>sign</goal>
                         </goals>
+                        <configuration>
+                            <useAgent>true</useAgent>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
