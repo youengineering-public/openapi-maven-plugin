@@ -4,7 +4,7 @@
 
     <groupId>com.github.carlkuesters</groupId>
     <artifactId>swagger-maven-plugin</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
     <packaging>maven-plugin</packaging>
 
     <name>Swagger Maven Plugin</name>
