@@ -1,0 +1,59 @@
+<project>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.github.carlkuesters</groupId>
+    <artifactId>swagger-maven-plugin-test-spring</artifactId>
+    <version>0.0.1</version>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.github.carlkuesters</groupId>
+                <artifactId>swagger-maven-plugin</artifactId>
+                <version>0.0.2</version>
+                <configuration>
+                    <sourcePackage>com.github.carlkuesters.swagger.samples.spring</sourcePackage>
+                    <framework>spring</framework>
+                    <content>
+                        <info>
+                            <title>Swagger Maven Plugin Sample</title>
+                            <description>This is a sample.</description>
+                            <version>v1</version>
+                            <contact>
+                                <name>Carl Küsters</name>
+                                <email>carl@kuesters@youengineering.com</email>
+                                <url>https://github.com/carlkuesters</url>
+                            </contact>
+                            <termsOfService>https://github.com/carlkuesters/swagger-maven-plugin</termsOfService>
+                            <license>
+                                <name>Apache 2.0</name>
+                                <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+                            </license>
+                        </info>
+                        <schemes>
+                            <scheme>http</scheme>
+                            <scheme>https</scheme>
+                        </schemes>
+                        <host>www.example.com:8080</host>
+                        <basePath>/api</basePath>
+                        <securityDefinitionsPath>${basedir}/../security-definitions.json</securityDefinitionsPath>
+                    </content>
+                    <output>
+                        <directory>${basedir}</directory>
+                        <fileName>generated</fileName>
+                        <formats>
+                            <format>json</format>
+                            <format>yaml</format>
+                        </formats>
+                    </output>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

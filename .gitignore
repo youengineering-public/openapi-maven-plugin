@@ -10,3 +10,7 @@
 
 # Maven
 target/
+
+# Tests
+generated.json
+generated.yaml

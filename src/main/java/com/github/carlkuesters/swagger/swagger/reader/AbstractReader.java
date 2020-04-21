@@ -42,12 +42,9 @@ public abstract class AbstractReader {
     protected final Log log;
 
     private String operationIdFormat;
-    
-    /**
-     * Supported parameters: {{packageName}}, {{className}}, {{methodName}}, {{httpMethod}}
-     * Suggested default value is: "{{className}}_{{methodName}}_{{httpMethod}}"
-     */
-    private static final String OPERATION_ID_FORMAT_DEFAULT = "{{methodName}}";
+
+    // Supported parameters: {{packageName}}, {{className}}, {{methodName}}, {{httpMethod}}
+    private static final String OPERATION_ID_FORMAT_DEFAULT = "{{className}}_{{methodName}}_{{httpMethod}}";
 
     public AbstractReader(AnnotatedClassService annotatedClassService, Log log) {
         this.annotatedClassService = annotatedClassService;

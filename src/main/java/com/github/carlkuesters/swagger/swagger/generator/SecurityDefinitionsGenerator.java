@@ -54,7 +54,7 @@ class SecurityDefinitionsGenerator {
         try {
             for (SecuritySchemeDefinition referenceDefinition : REFERENCE_DEFINITIONS) {
                 if (referenceDefinition.getType().equals(type)) {
-                    Json.mapper().readValue(node.traverse(), referenceDefinition.getClass());
+                    return Json.mapper().readValue(node.traverse(), referenceDefinition.getClass());
                 }
             }
             throw new GenerateException("Unknown security definition type: " + type);
