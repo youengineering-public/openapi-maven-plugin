@@ -3,13 +3,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.carlkuesters</groupId>
-    <artifactId>swagger-maven-plugin</artifactId>
-    <version>0.0.2</version>
+    <artifactId>openapi-maven-plugin</artifactId>
+    <version>0.0.3</version>
     <packaging>maven-plugin</packaging>
 
-    <name>Swagger Maven Plugin</name>
-    <description>Generates a Swagger file out of sourcecode.</description>
-    <url>https://github.com/carlkuesters/swagger-maven-plugin</url>
+    <name>OpenAPI Maven Plugin</name>
+    <description>Generates an OpenAPI file out of sourcecode.</description>
+    <url>https://github.com/carlkuesters/openapi-maven-plugin</url>
 
     <licenses>
         <license>
@@ -29,9 +29,9 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/carlkuesters/swagger-maven-plugin.git</connection>
-        <developerConnection>scm:git:ssh://github.com:carlkuesters/swagger-maven-plugin.git</developerConnection>
-        <url>http://github.com/carlkuesters/swagger-maven-plugin/tree/master</url>
+        <connection>scm:git:git://github.com/carlkuesters/openapi-maven-plugin.git</connection>
+        <developerConnection>scm:git:ssh://github.com:carlkuesters/openapi-maven-plugin.git</developerConnection>
+        <url>http://github.com/carlkuesters/openapi-maven-plugin/tree/master</url>
     </scm>
 
     <properties>
@@ -51,8 +51,8 @@
         <version.maven-source-plugin>3.2.1</version.maven-source-plugin>
         <version.nexus-staging-maven-plugin>1.6.8</version.nexus-staging-maven-plugin>
         <version.spring-web>5.2.5.RELEASE</version.spring-web>
-        <version.swagger-jersey-jaxrs>1.6.1</version.swagger-jersey-jaxrs>
         <version.swagger-jaxrs2>2.1.1</version.swagger-jaxrs2>
+        <version.swagger-parser-v3>2.0.19</version.swagger-parser-v3>
         <version.reflections>0.9.11</version.reflections>
     </properties>
 
@@ -86,6 +86,7 @@
             <artifactId>swagger-jaxrs2</artifactId>
             <version>${version.swagger-jaxrs2}</version>
         </dependency>
+        <!--Reflections-->
         <dependency>
             <groupId>org.reflections</groupId>
             <artifactId>reflections</artifactId>
@@ -127,6 +128,13 @@
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-compat</artifactId>
             <version>${version.maven-compat}</version>
+            <scope>test</scope>
+        </dependency>
+        <!--Needed to read actual + expected OpenAPI files back in to check equality-->
+        <dependency>
+            <groupId>io.swagger.parser.v3</groupId>
+            <artifactId>swagger-parser-v3</artifactId>
+            <version>${version.swagger-parser-v3}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -185,6 +193,7 @@
                             <goal>sign</goal>
                         </goals>
                         <configuration>
+                            <executable>gpg2</executable>
                             <useAgent>true</useAgent>
                         </configuration>
                     </execution>

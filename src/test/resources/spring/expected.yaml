@@ -1,8 +1,8 @@
 openapi: 3.0.1
 info:
-  title: Swagger Maven Plugin Sample
+  title: OpenAPI Maven Plugin Sample
   description: This is a sample.
-  termsOfService: https://github.com/carlkuesters/swagger-maven-plugin
+  termsOfService: https://github.com/carlkuesters/openapi-maven-plugin
   contact:
     name: Carl Küsters
     url: https://github.com/carlkuesters
@@ -22,25 +22,6 @@ paths:
       parameters:
         - name: parameterName
           in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                type: string
-      security: []
-  /echo/requestHeaderExpectHeaderValue:
-    get:
-      summary: ""
-      description: ""
-      operationId: TestController_requestHeaderExpectHeaderValue_get
-      parameters:
-        - name: requestHeaderValue
-          in: header
           required: true
           schema:
             type: string
@@ -90,101 +71,6 @@ paths:
               schema:
                 type: string
       security: []
-  /echo/requestHeaderExpectHeaderName:
-    get:
-      summary: ""
-      description: ""
-      operationId: TestController_requestHeaderExpectHeaderName_get
-      parameters:
-        - name: requestHeaderName
-          in: header
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                type: string
-      security: []
-  /echo/cookieValueExpectCookieName:
-    get:
-      summary: ""
-      description: ""
-      operationId: TestController_cookieValueExpectCookieName_get
-      parameters:
-        - name: cookieValueName
-          in: cookie
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                type: string
-      security: []
-  /echo/requestHeaderExpectParameterName:
-    get:
-      summary: ""
-      description: ""
-      operationId: TestController_requestHeaderExpectParameterName_get
-      parameters:
-        - name: parameterName
-          in: header
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                type: string
-      security: []
-  /echo/cookieValueExpectParameterName:
-    get:
-      summary: ""
-      description: ""
-      operationId: TestController_cookieValueExpectParameterName_get
-      parameters:
-        - name: parameterName
-          in: cookie
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                type: string
-      security: []
-  /echo/cookieValueExpectCookieValue:
-    get:
-      summary: ""
-      description: ""
-      operationId: TestController_cookieValueExpectCookieValue_get
-      parameters:
-        - name: cookieValueValue
-          in: cookie
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                type: string
-      security: []
   /echo/requestParamExpectParameterName:
     get:
       summary: ""
@@ -192,6 +78,25 @@ paths:
       operationId: TestController_requestParamExpectParameterName_get
       parameters:
         - name: parameterName
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+      security: []
+  /echo/requestParamExpectParamName:
+    get:
+      summary: ""
+      description: ""
+      operationId: TestController_requestParamExpectParamName_get
+      parameters:
+        - name: requestParamName
           in: query
           required: true
           schema:
@@ -223,14 +128,109 @@ paths:
               schema:
                 type: string
       security: []
-  /echo/requestParamExpectParamName:
+  /echo/requestHeaderExpectParameterName:
     get:
       summary: ""
       description: ""
-      operationId: TestController_requestParamExpectParamName_get
+      operationId: TestController_requestHeaderExpectParameterName_get
       parameters:
-        - name: requestParamName
-          in: query
+        - name: parameterName
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+      security: []
+  /echo/requestHeaderExpectHeaderName:
+    get:
+      summary: ""
+      description: ""
+      operationId: TestController_requestHeaderExpectHeaderName_get
+      parameters:
+        - name: requestHeaderName
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+      security: []
+  /echo/requestHeaderExpectHeaderValue:
+    get:
+      summary: ""
+      description: ""
+      operationId: TestController_requestHeaderExpectHeaderValue_get
+      parameters:
+        - name: requestHeaderValue
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+      security: []
+  /echo/cookieValueExpectParameterName:
+    get:
+      summary: ""
+      description: ""
+      operationId: TestController_cookieValueExpectParameterName_get
+      parameters:
+        - name: parameterName
+          in: cookie
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+      security: []
+  /echo/cookieValueExpectCookieName:
+    get:
+      summary: ""
+      description: ""
+      operationId: TestController_cookieValueExpectCookieName_get
+      parameters:
+        - name: cookieValueName
+          in: cookie
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+      security: []
+  /echo/cookieValueExpectCookieValue:
+    get:
+      summary: ""
+      description: ""
+      operationId: TestController_cookieValueExpectCookieValue_get
+      parameters:
+        - name: cookieValueValue
+          in: cookie
           required: true
           schema:
             type: string

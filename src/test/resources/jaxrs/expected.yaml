@@ -1,8 +1,8 @@
 openapi: 3.0.1
 info:
-  title: Swagger Maven Plugin Sample
+  title: OpenAPI Maven Plugin Sample
   description: This is a sample.
-  termsOfService: https://github.com/carlkuesters/swagger-maven-plugin
+  termsOfService: https://github.com/carlkuesters/openapi-maven-plugin
   contact:
     name: Carl Küsters
     url: https://github.com/carlkuesters
@@ -12,7 +12,7 @@ info:
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   version: v1
 servers:
-  - url: https://www.example.com:8080/api
+- url: https://www.example.com:8080/api
 paths:
   /pet:
     get:
@@ -26,8 +26,8 @@ paths:
             application/xml:
               schema:
                 required:
-                  - name
-                  - photoUrls
+                - name
+                - photoUrls
                 type: object
                 properties:
                   id:
@@ -54,14 +54,14 @@ paths:
                     type: string
                     description: pet status in the store
                     enum:
-                      - available,pending,sold
+                    - available,pending,sold
                 xml:
                   name: Pet
             application/json:
               schema:
                 required:
-                  - name
-                  - photoUrls
+                - name
+                - photoUrls
                 type: object
                 properties:
                   id:
@@ -88,7 +88,7 @@ paths:
                     type: string
                     description: pet status in the store
                     enum:
-                      - available,pending,sold
+                    - available,pending,sold
                 xml:
                   name: Pet
       security: []
@@ -97,20 +97,20 @@ paths:
       description: ""
       operationId: TestResource_updatePet_put
       parameters:
-        - name: pet
-          description: Pet object that needs to be added to the store
-          required: true
-          schema:
-            $ref: '#/components/schemas/Pet'
+      - name: pet
+        description: Pet object that needs to be added to the store
+        required: true
+        schema:
+          $ref: '#/components/schemas/Pet'
       responses:
         default:
           description: ""
           headers: {}
           content:
             ? ""
-              : schema: {}
-                examples: {}
-                encoding: {}
+            : schema: {}
+              examples: {}
+              encoding: {}
           links: {}
           $ref: '#/components/responses/'
         "400":
@@ -137,20 +137,20 @@ paths:
       description: ""
       operationId: TestResource_addPet_post
       parameters:
-        - name: pet
-          description: Pet object that needs to be added to the store
-          required: true
-          schema:
-            $ref: '#/components/schemas/Pet'
+      - name: pet
+        description: Pet object that needs to be added to the store
+        required: true
+        schema:
+          $ref: '#/components/schemas/Pet'
       responses:
         default:
           description: ""
           headers: {}
           content:
             ? ""
-              : schema: {}
-                examples: {}
-                encoding: {}
+            : schema: {}
+              examples: {}
+              encoding: {}
           links: {}
           $ref: '#/components/responses/'
         "405":
@@ -166,11 +166,11 @@ paths:
       description: ""
       operationId: TestResource_test_get
       parameters:
-        - name: pet
-          in: query
-          description: Test pet as json string in query
-          schema:
-            $ref: '#/components/schemas/Pet'
+      - name: pet
+        in: query
+        description: Test pet as json string in query
+        schema:
+          $ref: '#/components/schemas/Pet'
       responses:
         "200":
           description: successful operation
@@ -178,8 +178,8 @@ paths:
             application/xml:
               schema:
                 required:
-                  - name
-                  - photoUrls
+                - name
+                - photoUrls
                 type: object
                 properties:
                   id:
@@ -206,14 +206,14 @@ paths:
                     type: string
                     description: pet status in the store
                     enum:
-                      - available,pending,sold
+                    - available,pending,sold
                 xml:
                   name: Pet
             application/json:
               schema:
                 required:
-                  - name
-                  - photoUrls
+                - name
+                - photoUrls
                 type: object
                 properties:
                   id:
@@ -240,166 +240,9 @@ paths:
                     type: string
                     description: pet status in the store
                     enum:
-                      - available,pending,sold
+                    - available,pending,sold
                 xml:
                   name: Pet
-      security: []
-  /pet/{petId}/testInjectParam:
-    post:
-      summary: Updates a pet in the store with form data
-      description: ""
-      operationId: TestResource_updatePetWithFormViaInjectParam_post
-      parameters:
-        - name: petId
-          in: path
-          description: ID of pet that needs to be updated
-          required: true
-          schema:
-            $ref: '#/components/schemas/MyBean'
-        - name: name
-          in: form
-          description: Updated name of the pet
-          schema:
-            $ref: '#/components/schemas/MyBean'
-        - name: status
-          in: form
-          description: Updated status of the pet
-          schema:
-            $ref: '#/components/schemas/MyBean'
-        - name: myHeader
-          in: header
-          schema:
-            $ref: '#/components/schemas/MyBean'
-        - name: intValue
-          in: header
-          schema:
-            $ref: '#/components/schemas/MyBean'
-        - name: listValue
-          in: query
-          schema:
-            $ref: '#/components/schemas/MyBean'
-        - name: myNestedBeanHeader
-          in: header
-          description: Header from nested bean
-          schema:
-            $ref: '#/components/schemas/MyBean'
-        - name: constructorInjectedHeader
-          in: header
-          description: Header injected at constructor
-          schema:
-            $ref: '#/components/schemas/MyBean'
-        - name: testIntegerAllowableValues
-          in: query
-          description: testIntegerAllowableValues
-          schema:
-            $ref: '#/components/schemas/MyBean'
-        - name: constrainedField
-          in: query
-          required: true
-          schema:
-            $ref: '#/components/schemas/MyBean'
-        - name: myParentHeader
-          in: header
-          description: Header from parent
-          schema:
-            $ref: '#/components/schemas/MyBean'
-      responses:
-        "405":
-          description: Invalid input
-          headers: {}
-          content: {}
-          links: {}
-          $ref: '#/components/responses/'
-      security: []
-  /pet/test/testingVendorExtensions:
-    get:
-      summary: testingVendorExtensions
-      description: ""
-      operationId: TestResource_testingVendorExtensions_get
-      responses:
-        default:
-          description: successful operation
-      security: []
-  /pet/test/testingArrayResponse:
-    get:
-      summary: testingArrayResponse
-      description: ""
-      operationId: TestResource_testingArrayResponse_get
-      responses:
-        default:
-          description: ""
-          headers: {}
-          content:
-            ? ""
-              : schema: {}
-                examples: {}
-                encoding: {}
-          links: {}
-          $ref: '#/components/responses/'
-      security: []
-  /pet/findByStatus:
-    get:
-      summary: Finds Pets by status
-      description: Multiple status values can be provided with comma seperated strings
-      operationId: TestResource_findPetsByStatus_get
-      parameters:
-        - name: status
-          in: query
-          description: Status values that need to be considered for filter
-          required: true
-          schema:
-            type: string
-            default: available
-            enum:
-              - available,pending,sold
-      responses:
-        default:
-          description: ""
-          headers: {}
-          content:
-            ? ""
-              : schema: {}
-                examples: {}
-                encoding: {}
-          links: {}
-          $ref: '#/components/responses/'
-        "400":
-          description: Invalid status value
-          headers: {}
-          content: {}
-          links: {}
-          $ref: '#/components/responses/'
-      security: []
-  /pet/findAll:
-    get:
-      summary: Finds all Pets
-      description: Returns a paginated list of all the Pets.
-      operationId: TestResource_findAllPaginated_get
-      parameters:
-        - name: pageNumber
-          in: query
-          description: pageNumber
-          required: true
-          schema:
-            type: integer
-            format: int32
-      responses:
-        default:
-          description: ""
-          headers: {}
-          content:
-            ? ""
-              : schema: {}
-                examples: {}
-                encoding: {}
-          links: {}
-          $ref: '#/components/responses/'
-        "400":
-          description: Invalid page number value
-          headers: {}
-          content: {}
-          links: {}
-          $ref: '#/components/responses/'
       security: []
   /pet/{petId}:
     get:
@@ -408,25 +251,25 @@ paths:
         API error conditions
       operationId: TestResource_getPetById_get
       parameters:
-        - name: petId
-          in: path
-          description: ID of pet that needs to be fetched
-          required: true
-          schema:
-            maximum: 5
-            minimum: 1
-            pattern: '[0-9]'
-            type: integer
-            format: int64
+      - name: petId
+        in: path
+        description: ID of pet that needs to be fetched
+        required: true
+        schema:
+          maximum: 5
+          minimum: 1
+          pattern: '[0-9]'
+          type: integer
+          format: int64
       responses:
         default:
           description: ""
           headers: {}
           content:
             ? ""
-              : schema: {}
-                examples: {}
-                encoding: {}
+            : schema: {}
+              examples: {}
+              encoding: {}
           links: {}
           $ref: '#/components/responses/'
         "400":
@@ -447,59 +290,59 @@ paths:
       description: ""
       operationId: TestResource_updatePetWithForm_post
       parameters:
-        - name: petId
-          in: path
-          description: ID of pet that needs to be updated
-          required: true
-          schema:
-            $ref: '#/components/schemas/MyBean'
-        - name: name
-          in: form
-          description: Updated name of the pet
-          schema:
-            $ref: '#/components/schemas/MyBean'
-        - name: status
-          in: form
-          description: Updated status of the pet
-          schema:
-            $ref: '#/components/schemas/MyBean'
-        - name: myHeader
-          in: header
-          schema:
-            $ref: '#/components/schemas/MyBean'
-        - name: intValue
-          in: header
-          schema:
-            $ref: '#/components/schemas/MyBean'
-        - name: listValue
-          in: query
-          schema:
-            $ref: '#/components/schemas/MyBean'
-        - name: myNestedBeanHeader
-          in: header
-          description: Header from nested bean
-          schema:
-            $ref: '#/components/schemas/MyBean'
-        - name: constructorInjectedHeader
-          in: header
-          description: Header injected at constructor
-          schema:
-            $ref: '#/components/schemas/MyBean'
-        - name: testIntegerAllowableValues
-          in: query
-          description: testIntegerAllowableValues
-          schema:
-            $ref: '#/components/schemas/MyBean'
-        - name: constrainedField
-          in: query
-          required: true
-          schema:
-            $ref: '#/components/schemas/MyBean'
-        - name: myParentHeader
-          in: header
-          description: Header from parent
-          schema:
-            $ref: '#/components/schemas/MyBean'
+      - name: petId
+        in: path
+        description: ID of pet that needs to be updated
+        required: true
+        schema:
+          $ref: '#/components/schemas/MyBean'
+      - name: name
+        in: form
+        description: Updated name of the pet
+        schema:
+          $ref: '#/components/schemas/MyBean'
+      - name: status
+        in: form
+        description: Updated status of the pet
+        schema:
+          $ref: '#/components/schemas/MyBean'
+      - name: myHeader
+        in: header
+        schema:
+          $ref: '#/components/schemas/MyBean'
+      - name: intValue
+        in: header
+        schema:
+          $ref: '#/components/schemas/MyBean'
+      - name: listValue
+        in: query
+        schema:
+          $ref: '#/components/schemas/MyBean'
+      - name: myNestedBeanHeader
+        in: header
+        description: Header from nested bean
+        schema:
+          $ref: '#/components/schemas/MyBean'
+      - name: constructorInjectedHeader
+        in: header
+        description: Header injected at constructor
+        schema:
+          $ref: '#/components/schemas/MyBean'
+      - name: testIntegerAllowableValues
+        in: query
+        description: testIntegerAllowableValues
+        schema:
+          $ref: '#/components/schemas/MyBean'
+      - name: constrainedField
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/MyBean'
+      - name: myParentHeader
+        in: header
+        description: Header from parent
+        schema:
+          $ref: '#/components/schemas/MyBean'
       responses:
         "405":
           description: Invalid input
@@ -513,17 +356,17 @@ paths:
       description: ""
       operationId: TestResource_deletePet_delete
       parameters:
-        - name: api_key
-          in: header
-          schema:
-            type: string
-        - name: petId
-          in: path
-          description: Pet id to delete
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: api_key
+        in: header
+        schema:
+          type: string
+      - name: petId
+        in: path
+        description: Pet id to delete
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         "400":
           description: Invalid pet value
@@ -538,26 +381,59 @@ paths:
       description: ""
       operationId: TestResource_findPetByPetName_get
       parameters:
-        - name: petName
-          in: path
-          description: petName
-          required: true
-          schema:
-            pattern: '[^/]*'
-            type: string
+      - name: petName
+        in: path
+        description: petName
+        required: true
+        schema:
+          pattern: '[^/]*'
+          type: string
       responses:
         default:
           description: ""
           headers: {}
           content:
             ? ""
-              : schema: {}
-                examples: {}
-                encoding: {}
+            : schema: {}
+              examples: {}
+              encoding: {}
           links: {}
           $ref: '#/components/responses/'
         "400":
           description: Invalid pet name
+          headers: {}
+          content: {}
+          links: {}
+          $ref: '#/components/responses/'
+      security: []
+  /pet/findByStatus:
+    get:
+      summary: Finds Pets by status
+      description: Multiple status values can be provided with comma seperated strings
+      operationId: TestResource_findPetsByStatus_get
+      parameters:
+      - name: status
+        in: query
+        description: Status values that need to be considered for filter
+        required: true
+        schema:
+          type: string
+          default: available
+          enum:
+          - available,pending,sold
+      responses:
+        default:
+          description: ""
+          headers: {}
+          content:
+            ? ""
+            : schema: {}
+              examples: {}
+              encoding: {}
+          links: {}
+          $ref: '#/components/responses/'
+        "400":
+          description: Invalid status value
           headers: {}
           content: {}
           links: {}
@@ -570,21 +446,21 @@ paths:
         tag1, tag2, tag3 for testing.
       operationId: TestResource_findPetsByTags_get
       parameters:
-        - name: tags
-          in: query
-          description: Tags to filter by
-          required: true
-          schema:
-            type: string
+      - name: tags
+        in: query
+        description: Tags to filter by
+        required: true
+        schema:
+          type: string
       responses:
         default:
           description: ""
           headers: {}
           content:
             ? ""
-              : schema: {}
-                examples: {}
-                encoding: {}
+            : schema: {}
+              examples: {}
+              encoding: {}
           links: {}
           $ref: '#/components/responses/'
         "400":
@@ -594,6 +470,104 @@ paths:
           links: {}
           $ref: '#/components/responses/'
       deprecated: true
+      security: []
+  /pet/findAll:
+    get:
+      summary: Finds all Pets
+      description: Returns a paginated list of all the Pets.
+      operationId: TestResource_findAllPaginated_get
+      parameters:
+      - name: pageNumber
+        in: query
+        description: pageNumber
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        default:
+          description: ""
+          headers: {}
+          content:
+            ? ""
+            : schema: {}
+              examples: {}
+              encoding: {}
+          links: {}
+          $ref: '#/components/responses/'
+        "400":
+          description: Invalid page number value
+          headers: {}
+          content: {}
+          links: {}
+          $ref: '#/components/responses/'
+      security: []
+  /pet/{petId}/testInjectParam:
+    post:
+      summary: Updates a pet in the store with form data
+      description: ""
+      operationId: TestResource_updatePetWithFormViaInjectParam_post
+      parameters:
+      - name: petId
+        in: path
+        description: ID of pet that needs to be updated
+        required: true
+        schema:
+          $ref: '#/components/schemas/MyBean'
+      - name: name
+        in: form
+        description: Updated name of the pet
+        schema:
+          $ref: '#/components/schemas/MyBean'
+      - name: status
+        in: form
+        description: Updated status of the pet
+        schema:
+          $ref: '#/components/schemas/MyBean'
+      - name: myHeader
+        in: header
+        schema:
+          $ref: '#/components/schemas/MyBean'
+      - name: intValue
+        in: header
+        schema:
+          $ref: '#/components/schemas/MyBean'
+      - name: listValue
+        in: query
+        schema:
+          $ref: '#/components/schemas/MyBean'
+      - name: myNestedBeanHeader
+        in: header
+        description: Header from nested bean
+        schema:
+          $ref: '#/components/schemas/MyBean'
+      - name: constructorInjectedHeader
+        in: header
+        description: Header injected at constructor
+        schema:
+          $ref: '#/components/schemas/MyBean'
+      - name: testIntegerAllowableValues
+        in: query
+        description: testIntegerAllowableValues
+        schema:
+          $ref: '#/components/schemas/MyBean'
+      - name: constrainedField
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/MyBean'
+      - name: myParentHeader
+        in: header
+        description: Header from parent
+        schema:
+          $ref: '#/components/schemas/MyBean'
+      responses:
+        "405":
+          description: Invalid input
+          headers: {}
+          content: {}
+          links: {}
+          $ref: '#/components/responses/'
       security: []
   /pet/test/extensions:
     get:
@@ -612,10 +586,36 @@ paths:
                 type: string
       security: []
       ? ""
-        : extensionName3: extensionValue3
+      : extensionName3: extensionValue3
       firstExtension:
         extensionName2: extensionValue2
         extensionName1: extensionValue1
+  /pet/test/testingArrayResponse:
+    get:
+      summary: testingArrayResponse
+      description: ""
+      operationId: TestResource_testingArrayResponse_get
+      responses:
+        default:
+          description: ""
+          headers: {}
+          content:
+            ? ""
+            : schema: {}
+              examples: {}
+              encoding: {}
+          links: {}
+          $ref: '#/components/responses/'
+      security: []
+  /pet/test/testingVendorExtensions:
+    get:
+      summary: testingVendorExtensions
+      description: ""
+      operationId: TestResource_testingVendorExtensions_get
+      responses:
+        default:
+          description: successful operation
+      security: []
 components:
   schemas:
     Category:
@@ -635,7 +635,8 @@ components:
         namespace: http://com.wordnik/sample/model/category
     Pet:
       required:
-        - photoUrls
+      - name
+      - photoUrls
       type: object
       properties:
         id:
@@ -662,7 +663,7 @@ components:
           type: string
           description: pet status in the store
           enum:
-            - available,pending,sold
+          - available,pending,sold
       xml:
         name: Pet
     PetId:
@@ -684,6 +685,8 @@ components:
           type: string
       xml:
         name: Tag
+    ? ""
+    : {}
     MyNestedBean:
       type: object
       properties:
@@ -696,7 +699,7 @@ components:
           type: string
     MyBean:
       required:
-        - constrainedField
+      - constrainedField
       type: object
       properties:
         myParentheader:
@@ -730,8 +733,6 @@ components:
           minimum: 25
           type: integer
           format: int32
-    ? ""
-      : {}
   securitySchemes:
     petstore_auth:
       type: oauth2

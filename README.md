@@ -1,4 +1,4 @@
-# Swagger Maven Plugin
-Generates a Swagger file out of sourcecode.
+# OpenAPI Maven Plugin
+Generates an OpenAPI file out of sourcecode.
 
-Forked and improved from https://github.com/kongchen/swagger-maven-plugin.
+Initially forked from https://github.com/kongchen/swagger-maven-plugin, improved and updated from Swagger to OpenAPI.
