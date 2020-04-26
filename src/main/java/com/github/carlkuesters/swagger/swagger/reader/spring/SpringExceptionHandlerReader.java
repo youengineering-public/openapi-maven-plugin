@@ -27,13 +27,13 @@ class SpringExceptionHandlerReader {
     void processExceptionHandlers(Set<Class<?>> classes) {
         exceptionMapping.clear();
         log.debug("Looking for classes with @ControllerAdvice annotation");
-        for (Class clazz : classes) {
+        for (Class<?> clazz : classes) {
             ControllerAdvice advice = findAnnotation(clazz, ControllerAdvice.class);
             if (advice == null) {
                 continue;
             }
             log.debug(String.format("%s is annotated as @ControllerAdvice", clazz.getName()));
-            for (Method method: clazz.getMethods()) {
+            for (Method method : clazz.getMethods()) {
                 ExceptionHandler handler = findAnnotation(method, ExceptionHandler.class);
                 if (handler == null) {
                     log.debug(String.format("@ExceptionHandler is missing on %s method, skipping", method));
@@ -55,7 +55,7 @@ class SpringExceptionHandlerReader {
 
     List<ResponseStatus> getResponseStatiFromExceptions(Method method) {
         List<ResponseStatus> responseStati = new LinkedList<>();
-        for (Class exceptionClass: method.getExceptionTypes()) {
+        for (Class<?> exceptionClass: method.getExceptionTypes()) {
             ResponseStatus responseStatus = exceptionMapping.get(exceptionClass);
             // Fallback to exception own annotation
             if (responseStatus == null) {

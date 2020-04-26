@@ -1,6 +1,6 @@
 package com.github.carlkuesters.swagger.reflection;
 
-import io.swagger.util.ReflectionUtils;
+import io.swagger.v3.core.util.ReflectionUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;

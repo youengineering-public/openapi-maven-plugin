@@ -1,35 +1,48 @@
 package com.github.carlkuesters.swagger.swagger.reader.jaxrs;
 
-import com.google.common.base.Strings;
+import com.fasterxml.jackson.annotation.JsonView;
+import com.github.carlkuesters.swagger.swagger.reader.TypeUtil;
 import com.google.common.collect.ClassToInstanceMap;
 import com.google.common.collect.MutableClassToInstanceMap;
-import io.swagger.converter.ModelConverters;
-import io.swagger.jaxrs.ext.AbstractSwaggerExtension;
-import io.swagger.jaxrs.ext.SwaggerExtension;
-import io.swagger.models.parameters.*;
-import io.swagger.models.properties.Property;
+import io.swagger.v3.jaxrs2.ResolvedParameter;
+import io.swagger.v3.jaxrs2.ext.AbstractOpenAPIExtension;
+import io.swagger.v3.jaxrs2.ext.OpenAPIExtension;
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.parameters.CookieParameter;
+import io.swagger.v3.oas.models.parameters.HeaderParameter;
+import io.swagger.v3.oas.models.parameters.PathParameter;
+import io.swagger.v3.oas.models.parameters.QueryParameter;
+import org.apache.maven.plugin.logging.Log;
 
 import javax.ws.rs.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
-public class JaxrsParameterExtension extends AbstractSwaggerExtension {
+public class JaxrsParameterExtension extends AbstractOpenAPIExtension {
+
+    JaxrsParameterExtension(Log log) {
+        this.log = log;
+    }
+    private Log log;
 
     @Override
-    public List<Parameter> extractParameters(List<Annotation> annotations, Type type, Set<Type> typesToSkip, Iterator<SwaggerExtension> chain) {
+    public ResolvedParameter extractParameters(List<Annotation> annotations, Type type, Set<Type> typesToSkip, Components components, Consumes classConsumes, Consumes methodConsumes, boolean includeRequestBody, JsonView jsonViewAnnotation, Iterator<OpenAPIExtension> chain) {
         if (shouldIgnoreType(type, typesToSkip)) {
-            return new LinkedList<>();
+            return new ResolvedParameter();
         }
-        ClassToInstanceMap<Annotation> annotationInstances = toMap(annotations);
-        List<Parameter> parameters = extractParametersFromAnnotation(type, annotationInstances);
-        if (parameters.size() > 0) {
-            return parameters;
+        ClassToInstanceMap<Annotation> annotationInstances = toInstanceMap(annotations);
+        ResolvedParameter resolvedParameter = extractParametersFromAnnotation(type, annotationInstances);
+        if (resolvedParameter.parameters.size() > 0) {
+            return resolvedParameter;
         }
-        return super.extractParameters(annotations, type, typesToSkip, chain);
+        return super.extractParameters(annotations, type, typesToSkip, components, classConsumes, methodConsumes, includeRequestBody, jsonViewAnnotation, chain);
     }
 
-    private ClassToInstanceMap<Annotation> toMap(List<? extends Annotation> annotations) {
+    private ClassToInstanceMap<Annotation> toInstanceMap(List<? extends Annotation> annotations) {
         ClassToInstanceMap<Annotation> annotationMap = MutableClassToInstanceMap.create();
         for (Annotation annotation : annotations) {
             if (annotation == null) {
@@ -40,123 +53,66 @@ public class JaxrsParameterExtension extends AbstractSwaggerExtension {
         return annotationMap;
     }
 
-    private List<Parameter> extractParametersFromAnnotation(Type type, ClassToInstanceMap<Annotation> annotations) {
-        String defaultValue = "";
+    private ResolvedParameter extractParametersFromAnnotation(Type type, ClassToInstanceMap<Annotation> annotations) {
+        String defaultValue = null;
         if (annotations.containsKey(DefaultValue.class)) {
             DefaultValue defaultValueAnnotation = annotations.getInstance(DefaultValue.class);
             defaultValue = defaultValueAnnotation.value();
         }
 
-        List<Parameter> parameters = new LinkedList<>();
+        ResolvedParameter resolvedParameter = new ResolvedParameter();
         if (annotations.containsKey(QueryParam.class)) {
             QueryParam param = annotations.getInstance(QueryParam.class);
             QueryParameter queryParameter = extractQueryParam(type, defaultValue, param);
-            parameters.add(queryParameter);
+            resolvedParameter.parameters.add(queryParameter);
         } else if (annotations.containsKey(PathParam.class)) {
             PathParam param = annotations.getInstance(PathParam.class);
             PathParameter pathParameter = extractPathParam(type, defaultValue, param);
-            parameters.add(pathParameter);
+            resolvedParameter.parameters.add(pathParameter);
         } else if (annotations.containsKey(HeaderParam.class)) {
             HeaderParam param = annotations.getInstance(HeaderParam.class);
             HeaderParameter headerParameter = extractHeaderParam(type, defaultValue, param);
-            parameters.add(headerParameter);
+            resolvedParameter.parameters.add(headerParameter);
         } else if (annotations.containsKey(CookieParam.class)) {
             CookieParam param = annotations.getInstance(CookieParam.class);
             CookieParameter cookieParameter = extractCookieParameter(type, defaultValue, param);
-            parameters.add(cookieParameter);
-        } else if (annotations.containsKey(FormParam.class)) {
-            FormParam param = annotations.getInstance(FormParam.class);
-            FormParameter formParameter = extractFormParameter(type, defaultValue, param);
-            parameters.add(formParameter);
+            resolvedParameter.parameters.add(cookieParameter);
         }
 
-        return parameters;
+        return resolvedParameter;
     }
 
     private QueryParameter extractQueryParam(Type type, String defaultValue, QueryParam param) {
-        QueryParameter queryParameter = new QueryParameter().name(param.value());
-
-        if (!Strings.isNullOrEmpty(defaultValue)) {
-            queryParameter.setDefaultValue(defaultValue);
-        }
-        Property schema = ModelConverters.getInstance().readAsProperty(type);
-        if (schema != null) {
-            queryParameter.setProperty(schema);
-        }
-
-        String parameterType = queryParameter.getType();
-
-        if (parameterType == null || parameterType.equals("ref")) {
-            queryParameter.setType("string");
-        }
+        QueryParameter queryParameter = new QueryParameter();
+        queryParameter.setName(param.value());
+        queryParameter.setSchema(createPrimitiveSchema(type, defaultValue));
         return queryParameter;
     }
 
     private PathParameter extractPathParam(Type type, String defaultValue, PathParam param) {
-        PathParameter pathParameter = new PathParameter().name(param.value());
-        if (!Strings.isNullOrEmpty(defaultValue)) {
-            pathParameter.setDefaultValue(defaultValue);
-        }
-        Property schema = ModelConverters.getInstance().readAsProperty(type);
-        if (schema != null) {
-            pathParameter.setProperty(schema);
-        }
-
-        String parameterType = pathParameter.getType();
-        if (parameterType == null || parameterType.equals("ref")) {
-            pathParameter.setType("string");
-        }
+        PathParameter pathParameter = new PathParameter();
+        pathParameter.setName(param.value());
+        pathParameter.setSchema(createPrimitiveSchema(type, defaultValue));
         return pathParameter;
     }
 
     private HeaderParameter extractHeaderParam(Type type, String defaultValue, HeaderParam param) {
-        HeaderParameter headerParameter = new HeaderParameter().name(param.value());
-        if (!Strings.isNullOrEmpty(defaultValue)) {
-            headerParameter.setDefaultValue(defaultValue);
-        }
-        Property schema = ModelConverters.getInstance().readAsProperty(type);
-        if (schema != null) {
-            headerParameter.setProperty(schema);
-        }
-
-        String parameterType = headerParameter.getType();
-        if (parameterType == null || parameterType.equals("ref") || parameterType.equals("array")) {
-            headerParameter.setType("string");
-        }
+        HeaderParameter headerParameter = new HeaderParameter();
+        headerParameter.setName(param.value());
+        headerParameter.setSchema(createPrimitiveSchema(type, defaultValue));
         return headerParameter;
     }
 
     private CookieParameter extractCookieParameter(Type type, String defaultValue, CookieParam param) {
-        CookieParameter cookieParameter = new CookieParameter().name(param.value());
-        if (!Strings.isNullOrEmpty(defaultValue)) {
-            cookieParameter.setDefaultValue(defaultValue);
-        }
-        Property schema = ModelConverters.getInstance().readAsProperty(type);
-        if (schema != null) {
-            cookieParameter.setProperty(schema);
-        }
-
-        String parameterType = cookieParameter.getType();
-        if (parameterType == null || parameterType.equals("ref") || parameterType.equals("array")) {
-            cookieParameter.setType("string");
-        }
+        CookieParameter cookieParameter = new CookieParameter();
+        cookieParameter.setName(param.value());
+        cookieParameter.setSchema(createPrimitiveSchema(type, defaultValue));
         return cookieParameter;
     }
 
-    private FormParameter extractFormParameter(Type type, String defaultValue, FormParam param) {
-        FormParameter formParameter = new FormParameter().name(param.value());
-        if (!Strings.isNullOrEmpty(defaultValue)) {
-            formParameter.setDefaultValue(defaultValue);
-        }
-        Property schema = ModelConverters.getInstance().readAsProperty(type);
-        if (schema != null) {
-            formParameter.setProperty(schema);
-        }
-
-        String parameterType = formParameter.getType();
-        if (parameterType == null || parameterType.equals("ref") || parameterType.equals("array")) {
-            formParameter.setType("string");
-        }
-        return formParameter;
+    private Schema createPrimitiveSchema(Type type, String defaultValue) {
+        Schema primitiveSchema = TypeUtil.getPrimitiveSchema(type, log);
+        primitiveSchema.setDefault(defaultValue);
+        return primitiveSchema;
     }
 }

@@ -10,7 +10,7 @@ import com.github.carlkuesters.swagger.swagger.generator.SwaggerGenerator;
 import com.github.carlkuesters.swagger.swagger.reader.AbstractReader;
 import com.github.carlkuesters.swagger.config.ContentConfig;
 import com.github.carlkuesters.swagger.config.OutputConfig;
-import io.swagger.models.Swagger;
+import io.swagger.v3.oas.models.OpenAPI;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -39,12 +39,11 @@ public class GenerateMojo extends AbstractMojo {
             AnnotatedClassService annotatedClassService = new AnnotatedClassService();
             annotatedClassService.initialize(project, sourcePackage);
 
-            SwaggerPreparator.loadModelConverters_SubstituteFile(content.getModelSubstitute());
             SwaggerPreparator.loadModelConverters_Custom(content.getModelConverters());
 
             SwaggerGenerator swaggerGenerator = new SwaggerGenerator(content);
             AbstractReader reader = getReader(annotatedClassService);
-            Swagger swagger = swaggerGenerator.generateSwagger(reader);
+            OpenAPI swagger = swaggerGenerator.generateSwagger(reader);
 
             SwaggerExporter.write(swagger, output);
         } catch (GenerateException ex) {
@@ -58,8 +57,8 @@ public class GenerateMojo extends AbstractMojo {
         if (framework != null) {
             Log log = getLog();
             switch (framework) {
-                case jaxrs: return new JaxrsReader(annotatedClassService, log);
-                case spring: return new SpringReader(annotatedClassService, log);
+                case jaxrs: return new JaxrsReader(annotatedClassService, log, content);
+                case spring: return new SpringReader(annotatedClassService, log, content);
             }
         }
         throw new GenerateException("Invalid framework: " + framework);

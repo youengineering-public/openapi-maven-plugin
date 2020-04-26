@@ -1,320 +1,260 @@
----
-swagger: "2.0"
+openapi: 3.0.1
 info:
-  description: "This is a sample."
-  version: "v1"
-  title: "Swagger Maven Plugin Sample"
-  termsOfService: "https://github.com/carlkuesters/swagger-maven-plugin"
+  title: Swagger Maven Plugin Sample
+  description: This is a sample.
+  termsOfService: https://github.com/carlkuesters/swagger-maven-plugin
   contact:
-    name: "Carl Küsters"
-    url: "https://github.com/carlkuesters"
-    email: "carl@kuesters@youengineering.com"
+    name: Carl Küsters
+    url: https://github.com/carlkuesters
+    email: carl.kuesters@youengineering.com
   license:
-    name: "Apache 2.0"
-    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
-host: "www.example.com:8080"
-basePath: "/api"
-tags:
-- name: "echo"
-  description: "Set of simple endpoints that return whatever value you pass in"
-schemes:
-- "http"
-- "https"
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: v1
+servers:
+  - url: https://www.example.com:8080/api
 paths:
-  /echo/cookieValueExpectCookieName:
-    get:
-      tags:
-      - "echo"
-      summary: ""
-      description: ""
-      operationId: "EchoResource_cookieValueExpectCookieName_get"
-      produces:
-      - "application/json"
-      parameters:
-      - name: "cookieValueName"
-        in: "cookie"
-        required: true
-        type: "string"
-      responses:
-        "200":
-          description: "successful operation"
-          schema:
-            type: "string"
-  /echo/cookieValueExpectCookieValue:
-    get:
-      tags:
-      - "echo"
-      summary: ""
-      description: ""
-      operationId: "EchoResource_cookieValueExpectCookieValue_get"
-      produces:
-      - "application/json"
-      parameters:
-      - name: "cookieValueValue"
-        in: "cookie"
-        required: true
-        type: "string"
-      responses:
-        "200":
-          description: "successful operation"
-          schema:
-            type: "string"
-  /echo/cookieValueExpectParameterName:
-    get:
-      tags:
-      - "echo"
-      summary: ""
-      description: ""
-      operationId: "EchoResource_cookieValueExpectParameterName_get"
-      produces:
-      - "application/json"
-      parameters:
-      - name: "parameterName"
-        in: "cookie"
-        required: true
-        type: "string"
-      responses:
-        "200":
-          description: "successful operation"
-          schema:
-            type: "string"
   /echo/pathVariableExpectParameterName/{parameterName}:
     get:
-      tags:
-      - "echo"
       summary: ""
       description: ""
-      operationId: "EchoResource_pathVariableExpectParameterName_get"
-      produces:
-      - "application/json"
+      operationId: TestController_pathVariableExpectParameterName_get
       parameters:
-      - name: "parameterName"
-        in: "path"
-        required: true
-        type: "string"
+        - name: parameterName
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         "200":
-          description: "successful operation"
-          schema:
-            type: "string"
-  /echo/pathVariableExpectVariableName/{parameterName}:
-    get:
-      tags:
-      - "echo"
-      summary: ""
-      description: ""
-      operationId: "EchoResource_pathVariableExpectVariableName_get"
-      produces:
-      - "application/json"
-      parameters:
-      - name: "pathVariableName"
-        in: "path"
-        required: true
-        type: "string"
-      responses:
-        "200":
-          description: "successful operation"
-          schema:
-            type: "string"
-  /echo/pathVariableExpectVariableValue/{parameterName}:
-    get:
-      tags:
-      - "echo"
-      summary: ""
-      description: ""
-      operationId: "EchoResource_pathVariableExpectVariableValue_get"
-      produces:
-      - "application/json"
-      parameters:
-      - name: "pathVariableValue"
-        in: "path"
-        required: true
-        type: "string"
-      responses:
-        "200":
-          description: "successful operation"
-          schema:
-            type: "string"
-  /echo/requestHeaderExpectHeaderName:
-    get:
-      tags:
-      - "echo"
-      summary: ""
-      description: ""
-      operationId: "EchoResource_requestHeaderExpectHeaderName_get"
-      produces:
-      - "application/json"
-      parameters:
-      - name: "requestHeaderName"
-        in: "header"
-        required: true
-        type: "string"
-      responses:
-        "200":
-          description: "successful operation"
-          schema:
-            type: "string"
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+      security: []
   /echo/requestHeaderExpectHeaderValue:
     get:
-      tags:
-      - "echo"
       summary: ""
       description: ""
-      operationId: "EchoResource_requestHeaderExpectHeaderValue_get"
-      produces:
-      - "application/json"
+      operationId: TestController_requestHeaderExpectHeaderValue_get
       parameters:
-      - name: "requestHeaderValue"
-        in: "header"
-        required: true
-        type: "string"
+        - name: requestHeaderValue
+          in: header
+          required: true
+          schema:
+            type: string
       responses:
         "200":
-          description: "successful operation"
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+      security: []
+  /echo/pathVariableExpectVariableName/{pathVariableName}:
+    get:
+      summary: ""
+      description: ""
+      operationId: TestController_pathVariableExpectVariableName_get
+      parameters:
+        - name: pathVariableName
+          in: path
+          required: true
           schema:
-            type: "string"
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+      security: []
+  /echo/pathVariableExpectVariableValue/{pathVariableValue}:
+    get:
+      summary: ""
+      description: ""
+      operationId: TestController_pathVariableExpectVariableValue_get
+      parameters:
+        - name: pathVariableValue
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+      security: []
+  /echo/requestHeaderExpectHeaderName:
+    get:
+      summary: ""
+      description: ""
+      operationId: TestController_requestHeaderExpectHeaderName_get
+      parameters:
+        - name: requestHeaderName
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+      security: []
+  /echo/cookieValueExpectCookieName:
+    get:
+      summary: ""
+      description: ""
+      operationId: TestController_cookieValueExpectCookieName_get
+      parameters:
+        - name: cookieValueName
+          in: cookie
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+      security: []
   /echo/requestHeaderExpectParameterName:
     get:
-      tags:
-      - "echo"
       summary: ""
       description: ""
-      operationId: "EchoResource_requestHeaderExpectParameterName_get"
-      produces:
-      - "application/json"
+      operationId: TestController_requestHeaderExpectParameterName_get
       parameters:
-      - name: "parameterName"
-        in: "header"
-        required: true
-        type: "string"
+        - name: parameterName
+          in: header
+          required: true
+          schema:
+            type: string
       responses:
         "200":
-          description: "successful operation"
-          schema:
-            type: "string"
-  /echo/requestParamExpectParamName:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+      security: []
+  /echo/cookieValueExpectParameterName:
     get:
-      tags:
-      - "echo"
       summary: ""
       description: ""
-      operationId: "EchoResource_requestParamExpectParamName_get"
-      produces:
-      - "application/json"
+      operationId: TestController_cookieValueExpectParameterName_get
       parameters:
-      - name: "requestParamName"
-        in: "query"
-        required: true
-        type: "string"
+        - name: parameterName
+          in: cookie
+          required: true
+          schema:
+            type: string
       responses:
         "200":
-          description: "successful operation"
-          schema:
-            type: "string"
-  /echo/requestParamExpectParamValue:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+      security: []
+  /echo/cookieValueExpectCookieValue:
     get:
-      tags:
-      - "echo"
       summary: ""
       description: ""
-      operationId: "EchoResource_requestParamExpectParamValue_get"
-      produces:
-      - "application/json"
+      operationId: TestController_cookieValueExpectCookieValue_get
       parameters:
-      - name: "requestParamValue"
-        in: "query"
-        required: true
-        type: "string"
+        - name: cookieValueValue
+          in: cookie
+          required: true
+          schema:
+            type: string
       responses:
         "200":
-          description: "successful operation"
-          schema:
-            type: "string"
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+      security: []
   /echo/requestParamExpectParameterName:
     get:
-      tags:
-      - "echo"
       summary: ""
       description: ""
-      operationId: "EchoResource_requestParamExpectParameterName_get"
-      produces:
-      - "application/json"
+      operationId: TestController_requestParamExpectParameterName_get
       parameters:
-      - name: "parameterName"
-        in: "query"
-        required: true
-        type: "string"
+        - name: parameterName
+          in: query
+          required: true
+          schema:
+            type: string
       responses:
         "200":
-          description: "successful operation"
-          schema:
-            type: "string"
-  /echo/requestPartExpectParameterName:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+      security: []
+  /echo/requestParamExpectParamValue:
     get:
-      tags:
-      - "echo"
       summary: ""
       description: ""
-      operationId: "EchoResource_requestPartExpectParameterName_get"
-      produces:
-      - "application/json"
+      operationId: TestController_requestParamExpectParamValue_get
       parameters:
-      - name: "parameterName"
-        in: "formData"
-        required: true
-        type: "string"
+        - name: requestParamValue
+          in: query
+          required: true
+          schema:
+            type: string
       responses:
         "200":
-          description: "successful operation"
-          schema:
-            type: "string"
-  /echo/requestPartExpectPartName:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+      security: []
+  /echo/requestParamExpectParamName:
     get:
-      tags:
-      - "echo"
       summary: ""
       description: ""
-      operationId: "EchoResource_requestPartExpectPartName_get"
-      produces:
-      - "application/json"
+      operationId: TestController_requestParamExpectParamName_get
       parameters:
-      - name: "requestPartName"
-        in: "formData"
-        required: true
-        type: "string"
+        - name: requestParamName
+          in: query
+          required: true
+          schema:
+            type: string
       responses:
         "200":
-          description: "successful operation"
-          schema:
-            type: "string"
-  /echo/requestPartExpectPartValue:
-    get:
-      tags:
-      - "echo"
-      summary: ""
-      description: ""
-      operationId: "EchoResource_requestPartExpectPartValue_get"
-      produces:
-      - "application/json"
-      parameters:
-      - name: "requestPartValue"
-        in: "formData"
-        required: true
-        type: "string"
-      responses:
-        "200":
-          description: "successful operation"
-          schema:
-            type: "string"
-securityDefinitions:
-  petstore_auth:
-    type: "oauth2"
-    authorizationUrl: "http://swagger.io/api/oauth/dialog"
-    flow: "implicit"
-    scopes:
-      write:pets: "modify pets in your account"
-      read:pets: "read your pets"
-  api_key:
-    type: "apiKey"
-    name: "api_key"
-    in: "header"
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+      security: []
+components:
+  securitySchemes:
+    petstore_auth:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: https://example.com/api/oauth/dialog
+          scopes:
+            write:pets: modify pets in your account
+            read:pets: read your pets
+        authorizationCode:
+          authorizationUrl: https://example.com/api/oauth/dialog
+          tokenUrl: https://example.com/api/oauth/token
+          scopes:
+            write:pets: modify pets in your account
+            read:pets: read your pets

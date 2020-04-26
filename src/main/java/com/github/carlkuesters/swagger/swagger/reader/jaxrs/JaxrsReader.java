@@ -1,28 +1,21 @@
 package com.github.carlkuesters.swagger.swagger.reader.jaxrs;
 
+import com.github.carlkuesters.swagger.config.ContentConfig;
 import com.github.carlkuesters.swagger.reflection.AnnotatedClassService;
 import com.github.carlkuesters.swagger.swagger.reader.AbstractReader;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.SwaggerDefinition;
-import io.swagger.jaxrs.ext.SwaggerExtension;
-import io.swagger.jaxrs.ext.SwaggerExtensions;
-import io.swagger.jersey.SwaggerJerseyJaxrs;
-import io.swagger.models.Operation;
-import io.swagger.models.SecurityRequirement;
-import io.swagger.models.Swagger;
-import io.swagger.models.Tag;
-import io.swagger.models.parameters.Parameter;
-import io.swagger.util.PathUtils;
+import io.swagger.v3.jaxrs2.ext.OpenAPIExtension;
+import io.swagger.v3.jaxrs2.ext.OpenAPIExtensions;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.Operation;
+import io.swagger.v3.oas.models.parameters.Parameter;
 import org.apache.maven.plugin.logging.Log;
-import org.reflections.Reflections;
 
 import javax.ws.rs.*;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.*;
@@ -31,15 +24,14 @@ import static org.springframework.core.annotation.AnnotationUtils.findAnnotation
 
 public class JaxrsReader extends AbstractReader {
 
-    public JaxrsReader(AnnotatedClassService classLookupService, Log log) {
-        super(classLookupService, log);
+    public JaxrsReader(AnnotatedClassService annotatedClassService, Log log, ContentConfig contentConfig) {
+        super(annotatedClassService, log, contentConfig);
     }
 
     @Override
-    protected List<SwaggerExtension> getSwaggerExtensions() {
+    protected List<OpenAPIExtension> getSwaggerExtensions() {
         return Lists.newArrayList(
-                new SwaggerJerseyJaxrs(),
-                new JaxrsParameterExtension(),
+                new JaxrsParameterExtension(log),
                 new BeanParamInjectExtension()
         );
     }
@@ -50,47 +42,32 @@ public class JaxrsReader extends AbstractReader {
     }
 
     @Override
-    public void enrich(Swagger swagger, Set<Class<?>> apiClasses) {
+    public void enrich(OpenAPI swagger, Set<Class<?>> apiClasses) {
         for (Class<?> apiClass : apiClasses) {
             enrich(swagger, apiClass);
         }
     }
 
-    private void enrich(Swagger swagger, Class<?> apiClass) {
-        enrich(swagger, apiClass, "", null, false, new String[0], new String[0], new HashMap<>(), new ArrayList<>());
+    private void enrich(OpenAPI swagger, Class<?> apiClass) {
+        enrich(swagger, apiClass, "", null, false, new LinkedList<>());
     }
 
     private void enrich(
-            Swagger swagger,
+            OpenAPI swagger,
             Class<?> apiClass,
             String parentPath,
-            String parentMethod,
+            String parentHttpMethod,
             boolean readHidden,
-            String[] parentConsumes,
-            String[] parentProduces,
-            Map<String, Tag> parentTags,
             List<Parameter> parentParameters
     ) {
-        Api api = findAnnotation(apiClass, Api.class);
         Path apiPath = findAnnotation(apiClass, Path.class);
-
-        // Only enrich if allowing hidden apis OR api is not marked as hidden
-        if (!canReadApi(readHidden, api)) {
-            return;
-        }
-
-        Map<String, Tag> tags = updateTagsForApi(swagger, parentTags, api);
-        List<SecurityRequirement> securities = getSecurityRequirements(api);
-        Map<String, Tag> discoveredTags = scanClasspathForTags();
-
-        readCommonParameters(swagger, apiClass);
 
         // Look for method-level annotated properties
         // Handle subresources by looking at return type
         List<Method> filteredMethods = getFilteredMethods(apiClass);
         for (Method method : filteredMethods) {
-            ApiOperation apiOperation = findAnnotation(method, ApiOperation.class);
-            if (apiOperation != null && apiOperation.hidden()) {
+            io.swagger.v3.oas.annotations.Operation operationAnnotation = findAnnotation(method, io.swagger.v3.oas.annotations.Operation.class);
+            if ((operationAnnotation != null) && operationAnnotation.hidden()) {
                 continue;
             }
             Path methodPath = findAnnotation(method, Path.class);
@@ -114,44 +91,24 @@ public class JaxrsReader extends AbstractReader {
             }
             String operationPath = getPath(apiPath, methodPath, parentPathValue);
             if (operationPath != null) {
-                Map<String, String> regexMap = new HashMap<>();
-                operationPath = PathUtils.parsePath(operationPath, regexMap);
-
-                String httpMethod = extractOperationMethod(apiOperation, method, SwaggerExtensions.chain());
-
-                Operation operation = parseMethod(swagger, method, httpMethod);
-                updateOperationParameters(parentParameters, regexMap, operation);
-                updateOperationProtocols(apiOperation, operation);
-
-                String[] apiConsumes = new String[0];
-                String[] apiProduces = new String[0];
-
-                Consumes consumes = findAnnotation(apiClass, Consumes.class);
-                if (consumes != null) {
-                    apiConsumes = consumes.value();
+                String httpMethod = extractHttpMethod(method, OpenAPIExtensions.chain());
+                if (httpMethod == null) {
+                    httpMethod = parentHttpMethod;
                 }
-                Produces produces = findAnnotation(apiClass, Produces.class);
-                if (produces != null) {
-                    apiProduces = produces.value();
+                if (httpMethod != null) {
+                    Operation operation = parseAndAddMethod(swagger, apiClass, method, httpMethod, operationPath, parentParameters);
+                    if (isSubResource(httpMethod, method)) {
+                        Class<?> responseClass = method.getReturnType();
+                        log.debug("handling sub-resource method " + method.toString() + " -> " + responseClass);
+                        enrich(swagger, responseClass, operationPath, httpMethod, true, operation.getParameters());
+                    }
                 }
-
-                apiConsumes = updateOperationConsumes(parentConsumes, apiConsumes, operation);
-                apiProduces = updateOperationProduces(parentProduces, apiProduces, operation);
-
-                handleSubResource(swagger, apiConsumes, httpMethod, apiProduces, tags, method, apiOperation, operationPath, operation);
-
-                // Can't continue without a valid http method
-                httpMethod = (httpMethod == null) ? parentMethod : httpMethod;
-                updateTagsForOperation(swagger, operation, apiOperation);
-                updateOperation(apiConsumes, apiProduces, tags, securities, operation);
-                updatePath(swagger, operationPath, httpMethod, operation);
             }
-            updateTagDescriptions(swagger, discoveredTags);
         }
     }
 
     private List<Method> getFilteredMethods(Class<?> clazz) {
-        Method[] methods = clazz.getMethods();
+        Method[] methods = clazz.getDeclaredMethods();
         List<Method> filteredMethods = new ArrayList<>();
         for (Method method : methods) {
             if (!method.isBridge()) {
@@ -159,87 +116,6 @@ public class JaxrsReader extends AbstractReader {
             }
         }
         return filteredMethods;
-    }
-
-    /**
-     * Returns true when the swagger object already contains a common parameter
-     * with the same name and type as the passed parameter.
-     * 
-     * @param parameter The parameter to check.
-     * @return true if the swagger object already contains a common parameter with the same name and type
-     */
-    private boolean hasCommonParameter(Swagger swagger, Parameter parameter) {
-        Parameter commonParameter = swagger.getParameter(parameter.getName());
-        return commonParameter != null && parameter.getIn().equals(commonParameter.getIn());
-    }
-
-    private void readCommonParameters(Swagger swagger, Class<?> cls) {
-        Path path = findAnnotation(cls, Path.class);
-        if (path != null) {
-            return;
-        }
-
-        List<Method> filteredMethods = getFilteredMethods(cls);
-        for (Method method : filteredMethods) {
-            path = findAnnotation(method, Path.class);
-            if (path != null) {
-                return;
-            }
-            String httpMethod = extractOperationMethod(null, method, SwaggerExtensions.chain());
-            if (httpMethod != null) {
-                return;
-            }
-        }
-
-        Field[] fields = cls.getDeclaredFields();
-        for (Field field : fields) {
-            Annotation[] annotations = field.getAnnotations();
-            if (annotations.length > 0) {
-                List<Parameter> params = getParameters(swagger, cls, Arrays.asList(annotations));
-                for (Parameter param : params) {
-                    if (hasCommonParameter(swagger, param)) {
-                        throw new RuntimeException("[" + cls.getCanonicalName() + "] Redefining common parameter '" + param.getName() + "' already defined elsewhere");
-                    }
-                    swagger.addParameter(param.getName(), param);
-                }
-            }
-        }
-    }
-
-    private void updateTagDescriptions(Swagger swagger, Map<String, Tag> discoveredTags) {
-        if (swagger.getTags() != null) {
-            for (Tag tag : swagger.getTags()) {
-                Tag rightTag = discoveredTags.get(tag.getName());
-                if (rightTag != null && rightTag.getDescription() != null) {
-                    tag.setDescription(rightTag.getDescription());
-                }
-            }
-        }
-    }
-
-    private Map<String, Tag> scanClasspathForTags() {
-        Map<String, Tag> tags = new HashMap<>();
-        for (Class<?> aClass: new Reflections("").getTypesAnnotatedWith(SwaggerDefinition.class)) {
-            SwaggerDefinition swaggerDefinition = findAnnotation(aClass, SwaggerDefinition.class);
-            for (io.swagger.annotations.Tag tag : swaggerDefinition.tags()) {
-                String tagName = tag.name();
-                if (!tagName.isEmpty()) {
-                  tags.put(tag.name(), new Tag().name(tag.name()).description(tag.description()));
-                }
-            }
-        }
-        return tags;
-    }
-
-    private void handleSubResource(Swagger swagger, String[] apiConsumes, String httpMethod, String[] apiProduces, Map<String, Tag> tags, Method method, ApiOperation apiOperation, String operationPath, Operation operation) {
-        if (isSubResource(httpMethod, method)) {
-            Class<?> responseClass = method.getReturnType();
-            if (apiOperation != null && !apiOperation.response().equals(Void.class) && !apiOperation.response().equals(void.class)) {
-                responseClass = apiOperation.response();
-            }
-            log.debug("handling sub-resource method " + method.toString() + " -> " + responseClass);
-            enrich(swagger, responseClass, operationPath, httpMethod, true, apiConsumes, apiProduces, tags, operation.getParameters());
-        }
     }
 
     private boolean isSubResource(String httpMethod, Method method) {
@@ -285,10 +161,8 @@ public class JaxrsReader extends AbstractReader {
         }
     }
 
-    private String extractOperationMethod(ApiOperation apiOperation, Method method, Iterator<SwaggerExtension> chain) {
-        if (apiOperation != null && !apiOperation.httpMethod().isEmpty()) {
-            return apiOperation.httpMethod().toLowerCase();
-        } else if (findAnnotation(method, GET.class) != null) {
+    private String extractHttpMethod(Method method, Iterator<OpenAPIExtension> chain) {
+        if (findAnnotation(method, GET.class) != null) {
             return "get";
         } else if (findAnnotation(method, PUT.class) != null) {
             return "put";
@@ -300,7 +174,7 @@ public class JaxrsReader extends AbstractReader {
             return "options";
         } else if (findAnnotation(method, HEAD.class) != null) {
             return "head";
-        } else if (findAnnotation(method, io.swagger.jaxrs.PATCH.class) != null) {
+        } else if (findAnnotation(method, PATCH.class) != null) {
             return "patch";
         } else {
             // Check for custom HTTP Method annotations
@@ -314,7 +188,7 @@ public class JaxrsReader extends AbstractReader {
                 }
             }
             if (chain.hasNext()) {
-                return chain.next().extractOperationMethod(apiOperation, method, chain);
+                return chain.next().extractOperationMethod(method, chain);
             }
         }
         return null;
@@ -326,8 +200,8 @@ public class JaxrsReader extends AbstractReader {
     }
 
     @Override
-    protected List<String> getConsumes(Method method) {
-        Consumes consumes = findAnnotation(method, Consumes.class);
+    protected Collection<String> getConsumes(AnnotatedElement annotatedElement) {
+        Consumes consumes = findAnnotation(annotatedElement, Consumes.class);
         List<String> list = new LinkedList<>();
         if (consumes != null) {
             Collections.addAll(list, consumes.value());
@@ -336,8 +210,8 @@ public class JaxrsReader extends AbstractReader {
     }
 
     @Override
-    protected List<String> getProduces(Method method) {
-        Produces produces = findAnnotation(method, Produces.class);
+    protected Collection<String> getProduces(AnnotatedElement annotatedElement) {
+        Produces produces = findAnnotation(annotatedElement, Produces.class);
         List<String> list = new LinkedList<>();
         if (produces != null) {
             Collections.addAll(list, produces.value());

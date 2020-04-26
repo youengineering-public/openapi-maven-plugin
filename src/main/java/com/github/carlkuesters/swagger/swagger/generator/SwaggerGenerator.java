@@ -3,8 +3,10 @@ package com.github.carlkuesters.swagger.swagger.generator;
 import com.github.carlkuesters.swagger.GenerateException;
 import com.github.carlkuesters.swagger.config.ContentConfig;
 import com.github.carlkuesters.swagger.swagger.reader.AbstractReader;
-import io.swagger.models.Scheme;
-import io.swagger.models.Swagger;
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.Paths;
+import io.swagger.v3.oas.models.servers.Server;
 
 public class SwaggerGenerator {
 
@@ -14,25 +16,18 @@ public class SwaggerGenerator {
         this.contentConfig = contentConfig;
     }
 
-    public Swagger generateSwagger(AbstractReader reader) throws GenerateException {
-        Swagger swagger = new Swagger();
+    public OpenAPI generateSwagger(AbstractReader reader) throws GenerateException {
+        OpenAPI swagger = new OpenAPI();
         swagger.setInfo(contentConfig.getInfo());
-        if (contentConfig.getSchemes() != null) {
-            for (String scheme : contentConfig.getSchemes()) {
-                swagger.scheme(Scheme.forValue(scheme));
-            }
-        }
-        swagger.setHost(contentConfig.getHost());
-        swagger.setBasePath(contentConfig.getBasePath());
+        swagger.addServersItem(new Server().url(contentConfig.getServerUrl()));
         swagger.setExternalDocs(contentConfig.getExternalDocs());
+        Components components = new Components();
         if (contentConfig.getSecurityDefinitionsPath() != null) {
-            swagger.setSecurityDefinitions(SecurityDefinitionsGenerator.generateFromFile(contentConfig.getSecurityDefinitionsPath()));
+            components.setSecuritySchemes(SecuritySchemesGenerator.generateFromFile(contentConfig.getSecurityDefinitionsPath()));
         }
-
-        reader.setOperationIdFormat(contentConfig.getOperationIdFormat());
+        swagger.setComponents(components);
+        swagger.setPaths(new Paths());
         reader.enrich(swagger);
-
-        SwaggerUtil.sort(swagger);
         return swagger;
     }
 }

@@ -2,10 +2,10 @@ package com.github.carlkuesters.swagger;
 
 import com.github.carlkuesters.swagger.config.Framework;
 
-public class SpringTest extends FrameworkTest {
+public class JaxrsTest extends FrameworkTest {
 
-    public SpringTest() {
-        super(Framework.spring);
+    public JaxrsTest() {
+        super(Framework.jaxrs);
     }
 
     public void testGenerateFiles() throws Exception {

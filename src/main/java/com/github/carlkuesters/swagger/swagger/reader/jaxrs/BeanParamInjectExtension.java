@@ -1,18 +1,24 @@
 package com.github.carlkuesters.swagger.swagger.reader.jaxrs;
 
+import com.fasterxml.jackson.annotation.JsonView;
+import com.github.carlkuesters.swagger.swagger.reader.AbstractReaderSwaggerExtension;
 import com.github.carlkuesters.swagger.swagger.reader.TypeExtractor;
 import com.github.carlkuesters.swagger.swagger.reader.TypeWithAnnotations;
-import com.google.common.collect.Lists;
 import com.sun.jersey.api.core.InjectParam;
 import com.sun.jersey.core.header.FormDataContentDisposition;
-import io.swagger.jaxrs.ext.SwaggerExtension;
-import io.swagger.models.parameters.Parameter;
+import io.swagger.v3.jaxrs2.ResolvedParameter;
+import io.swagger.v3.jaxrs2.ext.OpenAPIExtension;
+import io.swagger.v3.oas.models.Components;
 import org.apache.commons.lang3.reflect.TypeUtils;
 
 import javax.ws.rs.BeanParam;
+import javax.ws.rs.Consumes;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 /**
  * This extension extracts the parameters inside a {@code @BeanParam} by
@@ -22,28 +28,26 @@ import java.util.*;
 public class BeanParamInjectExtension extends AbstractReaderSwaggerExtension {
 
     @Override
-    public List<Parameter> extractParameters(List<Annotation> annotations, Type type, Set<Type> typesToSkip, Iterator<SwaggerExtension> chain) {
+    public ResolvedParameter extractParameters(List<Annotation> annotations, Type type, Set<Type> typesToSkip, Components components, Consumes classConsumes, Consumes methodConsumes, boolean includeRequestBody, JsonView jsonViewAnnotation, Iterator<OpenAPIExtension> chain) {
         Class<?> clazz = TypeUtils.getRawType(type, type);
         if (shouldIgnoreClass(clazz)) {
-            return new LinkedList<>();
+            return new ResolvedParameter();
         }
         for (Annotation annotation : annotations) {
             if ((annotation instanceof BeanParam) || (annotation instanceof InjectParam)) {
-                return extractTypes(clazz, typesToSkip, Lists.newArrayList());
+                return extractTypes(clazz, typesToSkip, components, jsonViewAnnotation);
             }
         }
-        return super.extractParameters(annotations, type, typesToSkip, chain);
+        return super.extractParameters(annotations, type, typesToSkip, components, classConsumes, methodConsumes, includeRequestBody, jsonViewAnnotation, chain);
     }
 
-    private List<Parameter> extractTypes(Class<?> clazz, Set<Type> typesToSkip, List<Annotation> additionalAnnotations) {
-        List<Parameter> parameters = new ArrayList<>();
+    public ResolvedParameter extractTypes(Class<?> clazz, Set<Type> typesToSkip, Components components, JsonView jsonViewAnnotation) {
+        ResolvedParameter resolvedParameter = new ResolvedParameter();
 
         List<TypeWithAnnotations> typesWithAnnotations = TypeExtractor.extractTypes(clazz);
         for (TypeWithAnnotations typeWithAnnotations : typesWithAnnotations) {
             Type type = typeWithAnnotations.getType();
-
-            List<Annotation> annotations = new LinkedList<>(additionalAnnotations);
-            annotations.addAll(typeWithAnnotations.getAnnotations());
+            List<Annotation> annotations = typeWithAnnotations.getAnnotations();
 
             /*
              * Skip the type of the bean itself when recursing into its members
@@ -57,10 +61,12 @@ public class BeanParamInjectExtension extends AbstractReaderSwaggerExtension {
             Set<Type> recurseTypesToSkip = new HashSet<>(typesToSkip);
             recurseTypesToSkip.add(clazz);
 
-            parameters.addAll(reader.getParameters(swagger, type, annotations, recurseTypesToSkip));
+            ResolvedParameter additionalResolvedParameter = reader.getParameters(type, annotations, recurseTypesToSkip, components, new String[0], new String[0], jsonViewAnnotation);
+            resolvedParameter.parameters.addAll(additionalResolvedParameter.parameters);
+            resolvedParameter.formParameters.addAll(additionalResolvedParameter.formParameters);
         }
 
-        return parameters;
+        return resolvedParameter;
     }
 
     @Override

@@ -7,8 +7,8 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import io.swagger.models.Swagger;
-import io.swagger.util.Yaml;
+import io.swagger.v3.core.util.Yaml;
+import io.swagger.v3.oas.models.OpenAPI;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,7 +17,7 @@ import java.nio.file.Paths;
 
 public class SwaggerExporter {
 
-    public static void write(Swagger swagger, OutputConfig outputConfig) throws GenerateException {
+    public static void write(OpenAPI swagger, OutputConfig outputConfig) throws GenerateException {
         createDirectoryIfNotExists(outputConfig.getDirectory());
         for (OutputFormat outputFormat : outputConfig.getFormats()) {
             try {

@@ -1,36 +1,31 @@
 package com.github.carlkuesters.swagger.swagger.reader.spring;
 
-import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.github.carlkuesters.swagger.swagger.reader.TypeUtil;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import io.swagger.annotations.ApiParam;
-import io.swagger.converter.ModelConverters;
-import io.swagger.jaxrs.ext.AbstractSwaggerExtension;
-import io.swagger.jaxrs.ext.SwaggerExtension;
-import io.swagger.models.Swagger;
-import io.swagger.models.parameters.*;
-import io.swagger.models.properties.ArrayProperty;
-import io.swagger.models.properties.FileProperty;
-import io.swagger.models.properties.Property;
-import io.swagger.models.properties.StringProperty;
-import io.swagger.util.ParameterProcessor;
+import io.swagger.v3.core.util.ParameterProcessor;
+import io.swagger.v3.jaxrs2.ResolvedParameter;
+import io.swagger.v3.jaxrs2.ext.AbstractOpenAPIExtension;
+import io.swagger.v3.jaxrs2.ext.OpenAPIExtension;
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.parameters.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.apache.maven.plugin.logging.Log;
 import org.springframework.beans.BeanUtils;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
+import javax.ws.rs.Consumes;
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.*;
 
-public class SpringSwaggerExtension extends AbstractSwaggerExtension {
+public class SpringSwaggerExtension extends AbstractOpenAPIExtension {
 
     private static final String DEFAULT_VALUE = "\n\t\t\n\t\t\n\ue000\ue001\ue002\n\t\t\t\t\n";
     private static final RequestParam DEFAULT_REQUEST_PARAM = (RequestParam) AnnotationBearer.class.getDeclaredMethods()[0].getParameterAnnotations()[0][0];
@@ -52,9 +47,10 @@ public class SpringSwaggerExtension extends AbstractSwaggerExtension {
     }
 
     @Override
-    public List<Parameter> extractParameters(List<Annotation> annotations, Type type, Set<Type> typesToSkip, Iterator<SwaggerExtension> chain) {
-        if (this.shouldIgnoreType(type, typesToSkip)) {
-            return new ArrayList<>();
+    public ResolvedParameter extractParameters(List<Annotation> annotations, Type type, Set<Type> typesToSkip, Components components, Consumes classConsumes, Consumes methodConsumes, boolean includeRequestBody, JsonView jsonViewAnnotation, Iterator<OpenAPIExtension> chain) {
+        ResolvedParameter resolvedParameter = new ResolvedParameter();
+        if (shouldIgnoreType(type, typesToSkip)) {
+            return resolvedParameter;
         }
 
         if (annotations.isEmpty()) {
@@ -64,14 +60,13 @@ public class SpringSwaggerExtension extends AbstractSwaggerExtension {
 
         Map<Class<?>, Annotation> annotationMap = toMap(annotations);
 
-        List<Parameter> parameters = new ArrayList<>();
-        parameters.addAll(extractParametersFromModelAttributeAnnotation(type, annotationMap));
-        parameters.addAll(extractParametersFromAnnotation(type, annotationMap));
+        resolvedParameter.parameters.addAll(extractParametersFromModelAttributeAnnotation(type, annotationMap, jsonViewAnnotation));
+        resolvedParameter.parameters.addAll(extractParametersFromAnnotation(type, annotationMap));
 
-        if (!parameters.isEmpty()) {
-            return parameters;
+        if (!resolvedParameter.parameters.isEmpty()) {
+            return resolvedParameter;
         }
-        return super.extractParameters(annotations, type, typesToSkip, chain);
+        return super.extractParameters(annotations, type, typesToSkip, components, classConsumes, methodConsumes, includeRequestBody, jsonViewAnnotation, chain);
     }
 
     private Map<Class<?>, Annotation> toMap(List<? extends Annotation> annotations) {
@@ -117,132 +112,59 @@ public class SpringSwaggerExtension extends AbstractSwaggerExtension {
             CookieParameter cookieParameter = extractCookieValue(type, cookieValue);
             parameters.add(cookieParameter);
         }
-        if (annotations.containsKey(RequestPart.class)) {
-            RequestPart requestPart = (RequestPart) annotations.get(RequestPart.class);
-            FormParameter formParameter = extractRequestPart(type, requestPart);
-            parameters.add(formParameter);
-        }
 
         return parameters;
     }
 
-    private Parameter extractRequestParam(Type type, RequestParam requestParam) {
+    private QueryParameter extractRequestParam(Type type, RequestParam requestParam) {
         if (requestParam == null) {
             requestParam = DEFAULT_REQUEST_PARAM;
         }
-
         String paramName = StringUtils.defaultIfEmpty(requestParam.value(), requestParam.name());
-        QueryParameter queryParameter = new QueryParameter().name(paramName)
-                .required(requestParam.required());
-
-        if (!DEFAULT_VALUE.equals(requestParam.defaultValue())) {
-            queryParameter.setDefaultValue(requestParam.defaultValue());
-            // Supplying a default value implicitly sets required() to false.
-            queryParameter.setRequired(false);
-        }
-        Property schema = readAsPropertyIfPrimitive(type);
-        if (schema != null) {
-            queryParameter.setProperty(schema);
-        }
-
+        QueryParameter queryParameter = new QueryParameter();
+        queryParameter.setName(paramName);
+        queryParameter.setRequired(requestParam.required());
+        setSchema(queryParameter, type, requestParam.defaultValue());
         return queryParameter;
-    }
-
-    private FormParameter extractRequestPart(Type type, RequestPart requestPart) {
-        String paramName = StringUtils.defaultIfEmpty(requestPart.value(), requestPart.name());
-        FormParameter formParameter = new FormParameter().name(paramName)
-                .required(requestPart.required());
-
-        JavaType ct = constructType(type);
-        Property schema;
-
-        if (MultipartFile.class.isAssignableFrom(ct.getRawClass())) {
-            schema = new FileProperty();
-        } else if (ct.isContainerType() &&
-                MultipartFile.class.isAssignableFrom(ct.getContentType().getRawClass())) {
-            schema = new ArrayProperty().items(new FileProperty());
-        } else {
-            schema = ModelConverters.getInstance().readAsProperty(type);
-        }
-
-        if (schema != null) {
-            formParameter.setProperty(schema);
-        }
-        return formParameter;
     }
 
     private CookieParameter extractCookieValue(Type type, CookieValue cookieValue) {
         String paramName = StringUtils.defaultIfEmpty(cookieValue.value(), cookieValue.name());
-        CookieParameter cookieParameter = new CookieParameter().name(paramName)
-                .required(cookieValue.required());
-        Property schema = readAsPropertyIfPrimitive(type);
-        if (!DEFAULT_VALUE.equals(cookieValue.defaultValue())) {
-            cookieParameter.setDefaultValue(cookieValue.defaultValue());
-            cookieParameter.setRequired(false);
-        }
-        if (schema != null) {
-            cookieParameter.setProperty(schema);
-        }
+        CookieParameter cookieParameter = new CookieParameter();
+        cookieParameter.setName(paramName);
+        cookieParameter.setRequired(cookieValue.required());
+        setSchema(cookieParameter, type, cookieValue.defaultValue());
         return cookieParameter;
     }
 
     private HeaderParameter extractRequestHeader(Type type, RequestHeader requestHeader) {
         String paramName = StringUtils.defaultIfEmpty(requestHeader.value(), requestHeader.name());
-        HeaderParameter headerParameter = new HeaderParameter().name(paramName)
-                .required(requestHeader.required());
-        Property schema = readAsPropertyIfPrimitive(type);
-        if (!DEFAULT_VALUE.equals(requestHeader.defaultValue())) {
-            headerParameter.setDefaultValue(requestHeader.defaultValue());
-            headerParameter.setRequired(false);
-        }
-        if (schema != null) {
-            headerParameter.setProperty(schema);
-        }
+        HeaderParameter headerParameter = new HeaderParameter();
+        headerParameter.setName(paramName);
+        headerParameter.setRequired(requestHeader.required());
+        setSchema(headerParameter, type, requestHeader.defaultValue());
         return headerParameter;
     }
 
     private PathParameter extractPathVariable(Type type, PathVariable pathVariable) {
         String paramName = StringUtils.defaultIfEmpty(pathVariable.value(), pathVariable.name());
-        PathParameter pathParameter = new PathParameter().name(paramName);
-        Property schema = readAsPropertyIfPrimitive(type);
-        if (schema != null) {
-            pathParameter.setProperty(schema);
-        }
+        PathParameter pathParameter = new PathParameter();
+        pathParameter.setName(paramName);
+        pathParameter.setSchema(TypeUtil.getPrimitiveSchema(type, log));
         return pathParameter;
     }
 
-    private Property readAsPropertyIfPrimitive(Type type) {
-        if (TypeUtil.isPrimitive(type)) {
-            return ModelConverters.getInstance().readAsProperty(type);
-        } else {
-            log.warn(String.format("Non-primitive type: %s used as request/path/cookie parameter", type));
-            // Fallback to string if type is simple wrapper for String to support legacy code
-            JavaType ct = constructType(type);
-            if (isSimpleWrapperForString(ct.getRawClass())) {
-                log.warn(String.format("Non-primitive type: %s used as string for request/path/cookie parameter", type));
-                return new StringProperty();
-            }
+    private void setSchema(Parameter parameter, Type type, String defaultValue) {
+        Schema schema = TypeUtil.getPrimitiveSchema(type, log);
+        if (!DEFAULT_VALUE.equals(defaultValue)) {
+            schema.setDefault(defaultValue);
+            // Supplying a default value implicitly sets required() to false.
+            parameter.setRequired(false);
         }
-        return null;
+        parameter.setSchema(schema);
     }
 
-    private boolean isSimpleWrapperForString(Class<?> clazz) {
-        try {
-            Constructor<?>[] constructors = clazz.getConstructors();
-            if (constructors.length <= 2) {
-                if (constructors.length == 1) {
-                    return clazz.getConstructor(String.class) != null;
-                } else if (constructors.length == 2) {
-                    return clazz.getConstructor(String.class) != null && clazz.getConstructor() != null;
-                }
-            }
-            return false;
-        } catch (NoSuchMethodException ex) {
-            return false;
-        }
-    }
-
-    private List<Parameter> extractParametersFromModelAttributeAnnotation(Type type, Map<Class<?>, Annotation> annotations) {
+    private List<Parameter> extractParametersFromModelAttributeAnnotation(Type type, Map<Class<?>, Annotation> annotations, JsonView jsonViewAnnotation) {
         ModelAttribute modelAttribute = (ModelAttribute)annotations.get(ModelAttribute.class);
         if ((modelAttribute == null || !hasClassStartingWith(annotations.keySet(), "org.springframework.web.bind.annotation"))&& BeanUtils.isSimpleProperty(TypeUtils.getRawType(type, null))) {
             return Collections.emptyList();
@@ -254,29 +176,28 @@ public class SpringSwaggerExtension extends AbstractSwaggerExtension {
             // Get all the valid setter methods inside the bean
             Method propertyDescriptorSetter = propertyDescriptor.getWriteMethod();
             if (propertyDescriptorSetter != null) {
-                ApiParam propertySetterApiParam = AnnotationUtils.findAnnotation(propertyDescriptorSetter, ApiParam.class);
-                if (propertySetterApiParam == null) {
-                    // If we find a setter that doesn't have @ApiParam annotation, then skip it
+                io.swagger.v3.oas.annotations.Parameter propertySetterParameterAnnotation = AnnotationUtils.findAnnotation(propertyDescriptorSetter, io.swagger.v3.oas.annotations.Parameter.class);
+                if (propertySetterParameterAnnotation == null) {
+                    // If we find a setter that doesn't have @Parameter annotation, then skip it
                     continue;
                 }
 
-                // Here we have a bean setter method that is annotted with @ApiParam, but we still
+                // Here we have a bean setter method that is annotated with @Parameter, but we still
                 // need to know what type of parameter to create. In order to do this, we look for
-                // any annotation attached to the first method parameter of the setter fucntion.
+                // any annotation attached to the first method parameter of the setter function.
                 Annotation[][] parameterAnnotations = propertyDescriptorSetter.getParameterAnnotations();
                 if (parameterAnnotations == null || parameterAnnotations.length == 0) {
                     continue;
                 }
 
                 Class parameterClass = propertyDescriptor.getPropertyType();
-                List<Parameter> propertySetterExtractedParameters = this.extractParametersFromAnnotation(
-                        parameterClass, toMap(Arrays.asList(parameterAnnotations[0])));
+                List<Parameter> propertySetterExtractedParameters = this.extractParametersFromAnnotation(parameterClass, toMap(Arrays.asList(parameterAnnotations[0])));
 
                 for (Parameter parameter : propertySetterExtractedParameters) {
                     if (Strings.isNullOrEmpty(parameter.getName())) {
                         parameter.setName(propertyDescriptor.getDisplayName());
                     }
-                    ParameterProcessor.applyAnnotations(new Swagger(), parameter, type, Lists.newArrayList(propertySetterApiParam));
+                    ParameterProcessor.applyAnnotations(parameter, type, Lists.newArrayList(propertySetterParameterAnnotation), new Components(), new String[0], new String[0], jsonViewAnnotation);
                 }
                 parameters.addAll(propertySetterExtractedParameters);
             }

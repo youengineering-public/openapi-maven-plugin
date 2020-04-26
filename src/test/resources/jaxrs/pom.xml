@@ -10,8 +10,8 @@
                 <artifactId>swagger-maven-plugin</artifactId>
                 <version>0.0.2</version>
                 <configuration>
-                    <sourcePackage>com.github.carlkuesters.swagger.samples.spring</sourcePackage>
-                    <framework>spring</framework>
+                    <sourcePackage>com.github.carlkuesters.swagger.samples.jaxrs</sourcePackage>
+                    <framework>jaxrs</framework>
                     <content>
                         <info>
                             <title>Swagger Maven Plugin Sample</title>
