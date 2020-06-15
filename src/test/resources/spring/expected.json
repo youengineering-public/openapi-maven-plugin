@@ -3,7 +3,7 @@
   "info" : {
     "title" : "OpenAPI Maven Plugin Sample",
     "description" : "This is a sample.",
-    "termsOfService" : "https://github.com/carlkuesters/openapi-maven-plugin",
+    "termsOfService" : "https://github.com/youengineering/openapi-maven-plugin",
     "contact" : {
       "name" : "Carl Küsters",
       "url" : "https://github.com/carlkuesters",
