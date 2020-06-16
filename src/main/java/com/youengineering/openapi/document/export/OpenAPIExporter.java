@@ -34,7 +34,7 @@ public class OpenAPIExporter {
                         break;
                 }
                 String filePath = outputConfig.getDirectory() + "/" + outputConfig.getFileName() + "." + outputFormat.name();
-                Files.write(Paths.get(filePath), fileContent.getBytes());
+                Files.write(Paths.get(filePath), fileContent.getBytes("UTF8"));
             } catch (IOException ex) {
                 throw new GenerateException(String.format("Writing file [%s] failed.", outputFormat), ex);
             }
