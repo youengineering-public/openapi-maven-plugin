@@ -64,6 +64,7 @@ public class BeanParamInjectExtension extends AbstractReaderOpenAPIExtension {
             ResolvedParameter additionalResolvedParameter = reader.getParameters(type, annotations, recurseTypesToSkip, components, new String[0], new String[0], jsonViewAnnotation);
             resolvedParameter.parameters.addAll(additionalResolvedParameter.parameters);
             resolvedParameter.formParameters.addAll(additionalResolvedParameter.formParameters);
+            // TODO: Support requestBody via BeanParam
         }
 
         return resolvedParameter;

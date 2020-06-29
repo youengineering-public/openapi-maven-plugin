@@ -21,6 +21,7 @@ import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.Parameter;
+import io.swagger.v3.oas.models.parameters.RequestBody;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
@@ -30,7 +31,6 @@ import org.apache.commons.lang3.reflect.TypeUtils;
 import org.apache.maven.plugin.logging.Log;
 import org.codehaus.plexus.util.StringUtils;
 import org.springframework.core.DefaultParameterNameDiscoverer;
-import org.springframework.web.bind.annotation.*;
 
 import javax.ws.rs.*;
 import java.lang.annotation.Annotation;
@@ -103,11 +103,9 @@ public abstract class AbstractReader {
         // Because method parameters can contain parameters that are valid, but
         // not part of the API contract, first check to make sure the parameter
         // has at lease one annotation before processing it.  Also, check a
-        // whitelist to make sure that the annotation of the parameter is
-        // compatible with spring-maven-plugin
+        // whitelist to make sure that the annotation of the parameter is compatible
 
         List<Type> validParameterAnnotations = new ArrayList<>();
-        validParameterAnnotations.add(ModelAttribute.class);
         validParameterAnnotations.add(BeanParam.class);
         validParameterAnnotations.add(InjectParam.class);
         validParameterAnnotations.add(io.swagger.v3.oas.annotations.Parameter.class);
@@ -115,12 +113,13 @@ public abstract class AbstractReader {
         validParameterAnnotations.add(QueryParam.class);
         validParameterAnnotations.add(HeaderParam.class);
         validParameterAnnotations.add(FormParam.class);
-        validParameterAnnotations.add(RequestParam.class);
-        validParameterAnnotations.add(RequestBody.class);
-        validParameterAnnotations.add(PathVariable.class);
-        validParameterAnnotations.add(RequestHeader.class);
-        validParameterAnnotations.add(CookieValue.class);
-
+        // TODO: Only needed in the SpringReader
+        validParameterAnnotations.add(org.springframework.web.bind.annotation.CookieValue.class);
+        validParameterAnnotations.add(org.springframework.web.bind.annotation.ModelAttribute.class);
+        validParameterAnnotations.add(org.springframework.web.bind.annotation.PathVariable.class);
+        validParameterAnnotations.add(org.springframework.web.bind.annotation.RequestBody.class);
+        validParameterAnnotations.add(org.springframework.web.bind.annotation.RequestHeader.class);
+        validParameterAnnotations.add(org.springframework.web.bind.annotation.RequestParam.class);
 
         boolean hasValidAnnotation = false;
         for (Annotation potentialAnnotation : parameterAnnotations) {
@@ -161,7 +160,7 @@ public abstract class AbstractReader {
             if (!typesToSkip.contains(type)) {
                 Parameter param = ParameterProcessor.applyAnnotations(null, type, annotations, components, classTypes, methodTypes, jsonViewAnnotation);
                 if (param != null) {
-                    resolvedParameter.parameters.add(param);
+                    resolvedParameter.requestBody = param;
                 }
             }
         }
@@ -317,6 +316,11 @@ public abstract class AbstractReader {
                 }
                 operation.addParametersItem(parameter);
             }
+
+            if (resolvedParameter.requestBody != null) {
+                RequestBody requestBody = mapRequestBodyParameter(resolvedParameter.requestBody);
+                operation.setRequestBody(requestBody);
+            }
         }
 
         Map<String, String> regexMap = new HashMap<>();
@@ -348,6 +352,22 @@ public abstract class AbstractReader {
         operationId = operationId.replaceAll("\\{\\{methodName}}", method.getName());
         operationId = operationId.replaceAll("\\{\\{httpMethod}}", httpMethodName);
   		return operationId;
+    }
+
+    private RequestBody mapRequestBodyParameter(Parameter parameter) {
+        RequestBody requestBody = new RequestBody();
+        requestBody.setDescription(parameter.getDescription());
+        requestBody.setRequired(parameter.getRequired());
+        requestBody.setExtensions(parameter.getExtensions());
+        requestBody.set$ref(parameter.get$ref());
+        Content content = new Content();
+        MediaType mediaType = new MediaType();
+        mediaType.setSchema(parameter.getSchema());
+        mediaType.setExamples(parameter.getExamples());
+        mediaType.setExample(parameter.getExample());
+        content.put("application/json", mediaType);
+        requestBody.setContent(content);
+        return requestBody;
     }
 
     private List<io.swagger.v3.oas.annotations.tags.Tag> getTagAnnotations(AnnotatedElement annotatedElement) {

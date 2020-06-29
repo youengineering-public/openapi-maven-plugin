@@ -67,18 +67,18 @@ public class GenerateTest extends AbstractMojoTestCase {
     }
 
     private void assetGeneratedFile_Json(Framework framework) throws Exception {
-        JsonNode actualNode = Json.mapper().readTree(getSwaggerFile(framework, "generated", OutputFormat.json));
-        JsonNode expectedNode = Json.mapper().readTree(getSwaggerFile(framework, "expected", OutputFormat.json));
+        JsonNode actualNode = Json.mapper().readTree(getOpenAPIFile(framework, "generated", OutputFormat.json));
+        JsonNode expectedNode = Json.mapper().readTree(getOpenAPIFile(framework, "expected", OutputFormat.json));
         assertEquals(expectedNode, actualNode);
     }
 
     private void assetGeneratedFile_Yaml(Framework framework) {
-        OpenAPI actualOpenAPI = openAPIV3Parser.read(getSwaggerFile(framework, "generated", OutputFormat.yaml).getPath());
-        OpenAPI expectedOpenAPI = openAPIV3Parser.read(getSwaggerFile(framework, "expected", OutputFormat.yaml).getPath());
+        OpenAPI actualOpenAPI = openAPIV3Parser.read(getOpenAPIFile(framework, "generated", OutputFormat.yaml).getPath());
+        OpenAPI expectedOpenAPI = openAPIV3Parser.read(getOpenAPIFile(framework, "expected", OutputFormat.yaml).getPath());
         assertEquals(expectedOpenAPI, actualOpenAPI);
     }
 
-    private File getSwaggerFile(Framework framework, String fileName, OutputFormat outputFormat) {
+    private File getOpenAPIFile(Framework framework, String fileName, OutputFormat outputFormat) {
         return new File(getBasedir(), "src/test/resources/" + framework.name() + "/" + fileName + "." + outputFormat.name());
     }
 }

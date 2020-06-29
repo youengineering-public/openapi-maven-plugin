@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(value = "/echo")
-public class TestController {
+public class TestEchoController {
 
     @RequestMapping(value = "/pathVariableExpectParameterName/{parameterName}", method = RequestMethod.GET)
     @Operation
