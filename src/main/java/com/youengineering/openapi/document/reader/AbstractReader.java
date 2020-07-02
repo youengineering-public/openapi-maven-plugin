@@ -218,12 +218,13 @@ public abstract class AbstractReader {
             operation.setExtensions(AnnotationParser.parseExtensions(operationAnnotation.extensions()));
 
             responses = AnnotationParser.parseApiResponses(operationAnnotation.responses());
-            for (ApiResponse response : responses.values()) {
-                for (MediaType mediaType : response.getContent().values()) {
-                    openAPI.getComponents().addSchemas(mediaType.getSchema().getName(), mediaType.getSchema());
-                }
-            }
         }
+
+        io.swagger.v3.oas.annotations.responses.ApiResponses apiResponsesAnnotation = findMergedAnnotation(method, io.swagger.v3.oas.annotations.responses.ApiResponses.class);
+        if (apiResponsesAnnotation != null) {
+            responses = AnnotationParser.parseApiResponses(apiResponsesAnnotation.value());
+        }
+
         operation.setOperationId(operationId);
 
         List<io.swagger.v3.oas.annotations.tags.Tag> tagAnnotations = new LinkedList<>();
@@ -260,25 +261,29 @@ public abstract class AbstractReader {
             responseMediaTypes.add("application/json");
         }
 
-        Type responseType = resolveResponseType(method.getGenericReturnType());
-        if (!responseType.equals(Void.class) && !responseType.equals(void.class) && hasResponseContent(responseType, method, httpMethodName)) {
-            ResolvedSchema resolvedSchema = TypeUtil.getResolvedSchema(responseType);
-            ApiResponse response = responses.computeIfAbsent("200", statusCode -> {
-                ApiResponse newResponse = new ApiResponse();
+        String responseCode = "200";
+        // TODO: An improvement would be to support generating the schema from code and enrich it with the info from the annotation
+        if (!responses.containsKey(responseCode)) {
+            Type responseType = resolveResponseType(method.getGenericReturnType());
+            if (!responseType.equals(Void.class) && !responseType.equals(void.class) && hasResponseContent(responseType, method, httpMethodName)) {
+                ApiResponse response = new ApiResponse();
+                response.setDescription("");
                 Content content = new Content();
-                newResponse.setDescription("successful operation");
-                newResponse.setContent(content);
-                return newResponse;
-            });
-            Content content = response.getContent();
-            for (String responseMediaType : responseMediaTypes) {
-                MediaType mediaType = content.computeIfAbsent(responseMediaType, mt -> new MediaType());
-                mediaType.setSchema(resolvedSchema.schema);
-            }
-            for (Map.Entry<String, Schema> referencedSchemaEntry : resolvedSchema.referencedSchemas.entrySet()) {
-                openAPI.getComponents().addSchemas(referencedSchemaEntry.getKey(), referencedSchemaEntry.getValue());
+                ResolvedSchema resolvedSchema = TypeUtil.getResolvedSchema(responseType);
+                for (String responseMediaType : responseMediaTypes) {
+                    MediaType mediaType = content.computeIfAbsent(responseMediaType, mt -> new MediaType());
+                    mediaType.setSchema(resolvedSchema.schema);
+                }
+                response.setContent(content);
+                for (Map.Entry<String, Schema> referencedSchemaEntry : resolvedSchema.referencedSchemas.entrySet()) {
+                    if (referencedSchemaEntry.getValue() != resolvedSchema.schema) {
+                        openAPI.getComponents().addSchemas(referencedSchemaEntry.getKey(), referencedSchemaEntry.getValue());
+                    }
+                }
+                responses.put(responseCode, response);
             }
         }
+
         operation.setResponses(responses);
 
         Map<Integer, String> responseDescriptions = getResponseDescriptions(method);
@@ -292,7 +297,7 @@ public abstract class AbstractReader {
             operation.setDeprecated(true);
         }
 
-        // process parameters
+        // Process parameters
 
         for (Parameter parentParameter : parentParameters) {
             operation.addParametersItem(parentParameter);

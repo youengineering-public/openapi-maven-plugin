@@ -13,6 +13,6 @@ public class TestMappingController {
 
     @PostMapping("/post")
     public TestResponse testPost(@RequestBody TestRequestBody testRequestBody) {
-        return new TestResponse(testRequestBody.getNumber() + "_" + testRequestBody.getText());
+        return new TestResponse(testRequestBody.getText(), new TestInnerResponse(testRequestBody.getNumber()));
     }
 }

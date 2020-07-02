@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-public class TestResponse {
-    private String text;
-    private TestInnerResponse inner;
+public class TestInnerResponse {
+    private int number;
 }

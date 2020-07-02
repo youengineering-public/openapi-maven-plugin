@@ -21,7 +21,7 @@ paths:
       operationId: TestResource_get_get
       responses:
         "200":
-          description: successful operation
+          description: ""
           content:
             application/xml:
               schema:
@@ -106,32 +106,47 @@ paths:
       responses:
         default:
           description: ""
-          headers: {}
           content:
-            ? ""
-            : schema: {}
-              examples: {}
-              encoding: {}
-          links: {}
-          $ref: '#/components/responses/'
+            '*/*':
+              schema:
+                required:
+                  - name
+                  - photoUrls
+                type: object
+                properties:
+                  id:
+                    $ref: '#/components/schemas/PetId'
+                  category:
+                    $ref: '#/components/schemas/Category'
+                  name:
+                    $ref: '#/components/schemas/PetName'
+                  photoUrls:
+                    type: array
+                    xml:
+                      wrapped: true
+                    items:
+                      type: string
+                      xml:
+                        name: photoUrl
+                  tags:
+                    type: array
+                    xml:
+                      wrapped: true
+                    items:
+                      $ref: '#/components/schemas/Tag'
+                  status:
+                    type: string
+                    description: pet status in the store
+                    enum:
+                      - available,pending,sold
+                xml:
+                  name: Pet
         "400":
           description: Invalid ID supplied
-          headers: {}
-          content: {}
-          links: {}
-          $ref: '#/components/responses/'
         "404":
           description: Pet not found
-          headers: {}
-          content: {}
-          links: {}
-          $ref: '#/components/responses/'
         "405":
           description: Invalid input
-          headers: {}
-          content: {}
-          links: {}
-          $ref: '#/components/responses/'
       security: []
     post:
       summary: Add a new pet to the store
@@ -147,135 +162,43 @@ paths:
       responses:
         default:
           description: ""
-          headers: {}
           content:
-            ? ""
-            : schema: {}
-              examples: {}
-              encoding: {}
-          links: {}
-          $ref: '#/components/responses/'
+            '*/*':
+              schema:
+                required:
+                  - name
+                  - photoUrls
+                type: object
+                properties:
+                  id:
+                    $ref: '#/components/schemas/PetId'
+                  category:
+                    $ref: '#/components/schemas/Category'
+                  name:
+                    $ref: '#/components/schemas/PetName'
+                  photoUrls:
+                    type: array
+                    xml:
+                      wrapped: true
+                    items:
+                      type: string
+                      xml:
+                        name: photoUrl
+                  tags:
+                    type: array
+                    xml:
+                      wrapped: true
+                    items:
+                      $ref: '#/components/schemas/Tag'
+                  status:
+                    type: string
+                    description: pet status in the store
+                    enum:
+                      - available,pending,sold
+                xml:
+                  name: Pet
         "405":
           description: Invalid input
-          headers: {}
-          content: {}
-          links: {}
-          $ref: '#/components/responses/'
-      security: []
-  /pet/test:
-    get:
-      summary: Returns pet
-      description: ""
-      operationId: TestResource_test_get
-      parameters:
-        - name: pet
-          in: query
-          description: Test pet as json string in query
-          schema:
-            $ref: '#/components/schemas/Pet'
-      responses:
-        "200":
-          description: successful operation
-          content:
-            application/xml:
-              schema:
-                required:
-                  - name
-                  - photoUrls
-                type: object
-                properties:
-                  id:
-                    $ref: '#/components/schemas/PetId'
-                  category:
-                    $ref: '#/components/schemas/Category'
-                  name:
-                    $ref: '#/components/schemas/PetName'
-                  photoUrls:
-                    type: array
-                    xml:
-                      wrapped: true
-                    items:
-                      type: string
-                      xml:
-                        name: photoUrl
-                  tags:
-                    type: array
-                    xml:
-                      wrapped: true
-                    items:
-                      $ref: '#/components/schemas/Tag'
-                  status:
-                    type: string
-                    description: pet status in the store
-                    enum:
-                      - available,pending,sold
-                xml:
-                  name: Pet
-            application/json:
-              schema:
-                required:
-                  - name
-                  - photoUrls
-                type: object
-                properties:
-                  id:
-                    $ref: '#/components/schemas/PetId'
-                  category:
-                    $ref: '#/components/schemas/Category'
-                  name:
-                    $ref: '#/components/schemas/PetName'
-                  photoUrls:
-                    type: array
-                    xml:
-                      wrapped: true
-                    items:
-                      type: string
-                      xml:
-                        name: photoUrl
-                  tags:
-                    type: array
-                    xml:
-                      wrapped: true
-                    items:
-                      $ref: '#/components/schemas/Tag'
-                  status:
-                    type: string
-                    description: pet status in the store
-                    enum:
-                      - available,pending,sold
-                xml:
-                  name: Pet
-      security: []
-  /pet/pets/{petName}:
-    get:
-      summary: Finds Pets by name
-      description: ""
-      operationId: TestResource_findPetByPetName_get
-      parameters:
-        - name: petName
-          in: path
-          description: petName
-          required: true
-          schema:
-            pattern: '[^/]*'
-            type: string
-      responses:
-        default:
-          description: ""
-          headers: {}
-          content:
-            ? ""
-            : schema: {}
-              examples: {}
-              encoding: {}
-          links: {}
-          $ref: '#/components/responses/'
-        "400":
-          description: Invalid pet name
-          headers: {}
-          content: {}
-          links: {}
-          $ref: '#/components/responses/'
       security: []
   /pet/{petId}:
     get:
@@ -297,26 +220,45 @@ paths:
       responses:
         default:
           description: ""
-          headers: {}
           content:
-            ? ""
-            : schema: {}
-              examples: {}
-              encoding: {}
-          links: {}
-          $ref: '#/components/responses/'
+            '*/*':
+              schema:
+                required:
+                  - name
+                  - photoUrls
+                type: object
+                properties:
+                  id:
+                    $ref: '#/components/schemas/PetId'
+                  category:
+                    $ref: '#/components/schemas/Category'
+                  name:
+                    $ref: '#/components/schemas/PetName'
+                  photoUrls:
+                    type: array
+                    xml:
+                      wrapped: true
+                    items:
+                      type: string
+                      xml:
+                        name: photoUrl
+                  tags:
+                    type: array
+                    xml:
+                      wrapped: true
+                    items:
+                      $ref: '#/components/schemas/Tag'
+                  status:
+                    type: string
+                    description: pet status in the store
+                    enum:
+                      - available,pending,sold
+                xml:
+                  name: Pet
         "400":
           description: Invalid ID supplied
-          headers: {}
-          content: {}
-          links: {}
-          $ref: '#/components/responses/'
         "404":
           description: Pet not found
-          headers: {}
-          content: {}
-          links: {}
-          $ref: '#/components/responses/'
       security: []
     post:
       summary: Updates a pet in the store with form data
@@ -369,10 +311,6 @@ paths:
       responses:
         "405":
           description: Invalid input
-          headers: {}
-          content: {}
-          links: {}
-          $ref: '#/components/responses/'
       security: []
     delete:
       summary: Deletes a pet
@@ -393,10 +331,6 @@ paths:
       responses:
         "400":
           description: Invalid pet value
-          headers: {}
-          content: {}
-          links: {}
-          $ref: '#/components/responses/'
       security: []
   /pet/findByTags:
     get:
@@ -414,22 +348,33 @@ paths:
       responses:
         default:
           description: ""
-          headers: {}
           content:
-            ? ""
-            : schema: {}
-              examples: {}
-              encoding: {}
-          links: {}
-          $ref: '#/components/responses/'
+            '*/*': {}
         "400":
           description: Invalid tag value
-          headers: {}
-          content: {}
-          links: {}
-          $ref: '#/components/responses/'
       deprecated: true
       security: []
+  /pet/test/extensions:
+    get:
+      summary: testExtensions
+      description: ""
+      operationId: TestResource_testingExtensions_get
+      responses:
+        "200":
+          description: ""
+          content:
+            application/xml:
+              schema:
+                type: string
+            application/json:
+              schema:
+                type: string
+      security: []
+      x-:
+        extensionName3: extensionValue3
+      x-firstExtension:
+        extensionName2: extensionValue2
+        extensionName1: extensionValue1
   /pet/findAll:
     get:
       summary: Finds all Pets
@@ -446,20 +391,64 @@ paths:
       responses:
         default:
           description: ""
-          headers: {}
           content:
-            ? ""
-            : schema: {}
-              examples: {}
-              encoding: {}
-          links: {}
-          $ref: '#/components/responses/'
+            '*/*': {}
         "400":
           description: Invalid page number value
-          headers: {}
-          content: {}
-          links: {}
-          $ref: '#/components/responses/'
+      security: []
+  /pet/pets/{petName}:
+    get:
+      summary: Finds Pets by name
+      description: ""
+      operationId: TestResource_findPetByPetName_get
+      parameters:
+        - name: petName
+          in: path
+          description: petName
+          required: true
+          schema:
+            pattern: '[^/]*'
+            type: string
+      responses:
+        default:
+          description: ""
+          content:
+            '*/*':
+              schema:
+                required:
+                  - name
+                  - photoUrls
+                type: object
+                properties:
+                  id:
+                    $ref: '#/components/schemas/PetId'
+                  category:
+                    $ref: '#/components/schemas/Category'
+                  name:
+                    $ref: '#/components/schemas/PetName'
+                  photoUrls:
+                    type: array
+                    xml:
+                      wrapped: true
+                    items:
+                      type: string
+                      xml:
+                        name: photoUrl
+                  tags:
+                    type: array
+                    xml:
+                      wrapped: true
+                    items:
+                      $ref: '#/components/schemas/Tag'
+                  status:
+                    type: string
+                    description: pet status in the store
+                    enum:
+                      - available,pending,sold
+                xml:
+                  name: Pet
+        "400":
+          description: Invalid pet name
       security: []
   /pet/findByStatus:
     get:
@@ -473,48 +462,28 @@ paths:
           required: true
           schema:
             type: string
-            default: available
             enum:
               - available,pending,sold
+            default: available
       responses:
         default:
           description: ""
-          headers: {}
           content:
-            ? ""
-            : schema: {}
-              examples: {}
-              encoding: {}
-          links: {}
-          $ref: '#/components/responses/'
+            '*/*': {}
         "400":
           description: Invalid status value
-          headers: {}
-          content: {}
-          links: {}
-          $ref: '#/components/responses/'
       security: []
-  /pet/test/extensions:
+  /pet/test/testingArrayResponse:
     get:
-      summary: testExtensions
+      summary: testingArrayResponse
       description: ""
-      operationId: TestResource_testingExtensions_get
+      operationId: TestResource_testingArrayResponse_get
       responses:
-        "200":
-          description: successful operation
+        default:
+          description: ""
           content:
-            application/xml:
-              schema:
-                type: string
-            application/json:
-              schema:
-                type: string
+            '*/*': {}
       security: []
-      ? ""
-      : extensionName3: extensionValue3
-      firstExtension:
-        extensionName2: extensionValue2
-        extensionName1: extensionValue1
   /pet/{petId}/testInjectParam:
     post:
       summary: Updates a pet in the store with form data
@@ -567,27 +536,6 @@ paths:
       responses:
         "405":
           description: Invalid input
-          headers: {}
-          content: {}
-          links: {}
-          $ref: '#/components/responses/'
-      security: []
-  /pet/test/testingArrayResponse:
-    get:
-      summary: testingArrayResponse
-      description: ""
-      operationId: TestResource_testingArrayResponse_get
-      responses:
-        default:
-          description: ""
-          headers: {}
-          content:
-            ? ""
-            : schema: {}
-              examples: {}
-              encoding: {}
-          links: {}
-          $ref: '#/components/responses/'
       security: []
   /pet/test/testingVendorExtensions:
     get:
@@ -597,6 +545,90 @@ paths:
       responses:
         default:
           description: successful operation
+      security: []
+  /pet/test:
+    get:
+      summary: Returns pet
+      description: ""
+      operationId: TestResource_test_get
+      parameters:
+        - name: pet
+          in: query
+          description: Test pet as json string in query
+          schema:
+            $ref: '#/components/schemas/Pet'
+      responses:
+        "200":
+          description: ""
+          content:
+            application/xml:
+              schema:
+                required:
+                  - name
+                  - photoUrls
+                type: object
+                properties:
+                  id:
+                    $ref: '#/components/schemas/PetId'
+                  category:
+                    $ref: '#/components/schemas/Category'
+                  name:
+                    $ref: '#/components/schemas/PetName'
+                  photoUrls:
+                    type: array
+                    xml:
+                      wrapped: true
+                    items:
+                      type: string
+                      xml:
+                        name: photoUrl
+                  tags:
+                    type: array
+                    xml:
+                      wrapped: true
+                    items:
+                      $ref: '#/components/schemas/Tag'
+                  status:
+                    type: string
+                    description: pet status in the store
+                    enum:
+                      - available,pending,sold
+                xml:
+                  name: Pet
+            application/json:
+              schema:
+                required:
+                  - name
+                  - photoUrls
+                type: object
+                properties:
+                  id:
+                    $ref: '#/components/schemas/PetId'
+                  category:
+                    $ref: '#/components/schemas/Category'
+                  name:
+                    $ref: '#/components/schemas/PetName'
+                  photoUrls:
+                    type: array
+                    xml:
+                      wrapped: true
+                    items:
+                      type: string
+                      xml:
+                        name: photoUrl
+                  tags:
+                    type: array
+                    xml:
+                      wrapped: true
+                    items:
+                      $ref: '#/components/schemas/Tag'
+                  status:
+                    type: string
+                    description: pet status in the store
+                    enum:
+                      - available,pending,sold
+                xml:
+                  name: Pet
       security: []
 components:
   schemas:
@@ -667,8 +699,6 @@ components:
           type: string
       xml:
         name: Tag
-    ? ""
-    : {}
     MyNestedBean:
       type: object
       properties:

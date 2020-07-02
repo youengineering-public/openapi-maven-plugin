@@ -1,5 +1,6 @@
 package com.youengineering.openapi.document.reader;
 
+import io.swagger.v3.core.converter.ResolvedSchema;
 import io.swagger.v3.oas.annotations.extensions.Extension;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.links.LinkParameter;
@@ -36,17 +37,26 @@ public class AnnotationParser {
             apiResponse.setContent(parseContent(apiResponseAnnotation.content()));
             apiResponse.setLinks(parseLinks(apiResponseAnnotation.links()));
             apiResponse.setExtensions(parseExtensions(apiResponseAnnotation.extensions()));
-            apiResponse.set$ref(apiResponseAnnotation.ref());
+
+            // Setting ref with empty string ends up in "#/components/responses/"
+            String ref = apiResponseAnnotation.ref();
+            if (!ref.isEmpty()) {
+                apiResponse.set$ref(ref);
+            }
+
             apiResponses.put(apiResponseAnnotation.responseCode(), apiResponse);
         }
         return apiResponses;
     }
 
     static Map<String, Header> parseHeaders(io.swagger.v3.oas.annotations.headers.Header[] headerAnnotations) {
-        Map<String, Header> headers = new HashMap<>();
-        for (io.swagger.v3.oas.annotations.headers.Header headerAnnotation : headerAnnotations) {
-            Header header = parseHeader(headerAnnotation);
-            headers.put(headerAnnotation.name(), header);
+        Map<String, Header> headers = null;
+        if (headerAnnotations.length > 0) {
+            headers = new HashMap<>();
+            for (io.swagger.v3.oas.annotations.headers.Header headerAnnotation : headerAnnotations) {
+                Header header = parseHeader(headerAnnotation);
+                headers.put(headerAnnotation.name(), header);
+            }
         }
         return headers;
     }
@@ -61,10 +71,17 @@ public class AnnotationParser {
     }
 
     static Content parseContent(io.swagger.v3.oas.annotations.media.Content[] contentAnnotations) {
-        Content content = new Content();
-        for (io.swagger.v3.oas.annotations.media.Content contentAnnotation : contentAnnotations) {
-            MediaType mediaType = parseMediaType(contentAnnotation);
-            content.put(contentAnnotation.mediaType(), mediaType);
+        Content content = null;
+        if (contentAnnotations.length > 0) {
+            content = new Content();
+            for (io.swagger.v3.oas.annotations.media.Content contentAnnotation : contentAnnotations) {
+                String mediaTypeKey = contentAnnotation.mediaType();
+                if (mediaTypeKey.isEmpty()) {
+                    mediaTypeKey = "*/*";
+                }
+                MediaType mediaType = parseMediaType(contentAnnotation);
+                content.put(mediaTypeKey, mediaType);
+            }
         }
         return content;
     }
@@ -78,18 +95,35 @@ public class AnnotationParser {
         return mediaType;
     }
 
-    static Schema parseSchema(io.swagger.v3.oas.annotations.media.Schema schemaAnnotation) {
-        Schema schema = new Schema();
-        schema.setName(schemaAnnotation.name());
-        // TODO
+    static Schema<?> parseSchema(io.swagger.v3.oas.annotations.media.Schema schemaAnnotation) {
+        Schema<?> schema;
+        Class<?> implementation = schemaAnnotation.implementation();
+        if (implementation != Void.class) {
+            ResolvedSchema resolvedSchema = TypeUtil.getResolvedSchema(implementation);
+            schema = resolvedSchema.schema;
+        } else {
+            schema = new Schema<>();
+        }
+        String name = schemaAnnotation.name();
+        if (!name.isEmpty()) {
+            schema.setName(name);
+        }
+        String description = schemaAnnotation.description();
+        if (!description.isEmpty()) {
+            schema.setDescription(description);
+        }
+        // TODO: Map rest of properties
         return schema;
     }
 
     static Map<String, Example> parseExamples(ExampleObject[] exampleObjectAnnotations) {
-        Map<String, Example> examples = new HashMap<>();
-        for (ExampleObject exampleObjectAnnotation : exampleObjectAnnotations) {
-            Example example = parseExample(exampleObjectAnnotation);
-            examples.put(exampleObjectAnnotation.name(), example);
+        Map<String, Example> examples = null;
+        if (exampleObjectAnnotations.length > 0) {
+            examples = new HashMap<>();
+            for (ExampleObject exampleObjectAnnotation : exampleObjectAnnotations) {
+                Example example = parseExample(exampleObjectAnnotation);
+                examples.put(exampleObjectAnnotation.name(), example);
+            }
         }
         return examples;
     }
@@ -106,10 +140,13 @@ public class AnnotationParser {
     }
 
     static Map<String, Encoding> parseEncodings(io.swagger.v3.oas.annotations.media.Encoding[] encodingAnnotations) {
-        Map<String, Encoding> encodings = new HashMap<>();
-        for (io.swagger.v3.oas.annotations.media.Encoding encodingAnnotation : encodingAnnotations) {
-            Encoding encoding = parseEncoding(encodingAnnotation);
-            encodings.put(encodingAnnotation.name(), encoding);
+        Map<String, Encoding> encodings = null;
+        if (encodingAnnotations.length > 0) {
+            encodings = new HashMap<>();
+            for (io.swagger.v3.oas.annotations.media.Encoding encodingAnnotation : encodingAnnotations) {
+                Encoding encoding = parseEncoding(encodingAnnotation);
+                encodings.put(encodingAnnotation.name(), encoding);
+            }
         }
         return encodings;
     }
@@ -126,10 +163,13 @@ public class AnnotationParser {
     }
 
     static Map<String, Link> parseLinks(io.swagger.v3.oas.annotations.links.Link[] linkAnnotations) {
-        Map<String, Link> links = new HashMap<>();
-        for (io.swagger.v3.oas.annotations.links.Link linkAnnotation : linkAnnotations) {
-            Link link = parseLink(linkAnnotation);
-            links.put(linkAnnotation.name(), link);
+        Map<String, Link> links = null;
+        if (linkAnnotations.length > 0) {
+            links = new HashMap<>();
+            for (io.swagger.v3.oas.annotations.links.Link linkAnnotation : linkAnnotations) {
+                Link link = parseLink(linkAnnotation);
+                links.put(linkAnnotation.name(), link);
+            }
         }
         return links;
     }
@@ -148,9 +188,12 @@ public class AnnotationParser {
     }
 
     static Map<String, String> parseLinkParameters(LinkParameter[] linkParameterAnnotations) {
-        Map<String, String> linkParameters = new HashMap<>();
-        for (LinkParameter linkParameterAnnotation : linkParameterAnnotations) {
-            linkParameters.put(linkParameterAnnotation.name(), linkParameterAnnotation.expression());
+        Map<String, String> linkParameters = null;
+        if (linkParameterAnnotations.length > 0) {
+            linkParameters = new HashMap<>();
+            for (LinkParameter linkParameterAnnotation : linkParameterAnnotations) {
+                linkParameters.put(linkParameterAnnotation.name(), linkParameterAnnotation.expression());
+            }
         }
         return linkParameters;
     }
@@ -165,10 +208,13 @@ public class AnnotationParser {
     }
 
     static ServerVariables parseServerVariables(io.swagger.v3.oas.annotations.servers.ServerVariable[] serverVariableAnnotations) {
-        ServerVariables serverVariables = new ServerVariables();
-        for (io.swagger.v3.oas.annotations.servers.ServerVariable serverVariableAnnotation : serverVariableAnnotations) {
-            ServerVariable serverVariable = parseServerVariable(serverVariableAnnotation);
-            serverVariables.put(serverVariableAnnotation.name(), serverVariable);
+        ServerVariables serverVariables = null;
+        if (serverVariableAnnotations.length > 0) {
+            serverVariables = new ServerVariables();
+            for (io.swagger.v3.oas.annotations.servers.ServerVariable serverVariableAnnotation : serverVariableAnnotations) {
+                ServerVariable serverVariable = parseServerVariable(serverVariableAnnotation);
+                serverVariables.put(serverVariableAnnotation.name(), serverVariable);
+            }
         }
         return serverVariables;
     }
@@ -207,13 +253,16 @@ public class AnnotationParser {
     }
 
     static Map<String, Object> parseExtensions(Extension[] extensionAnnotations) {
-        Map<String, Object> extensions = new HashMap<>();
-        for (Extension extensionAnnotation : extensionAnnotations) {
-            Map<String, String> extensionProperties = new HashMap<>();
-            for (ExtensionProperty extensionPropertyAnnotation : extensionAnnotation.properties()) {
-                extensionProperties.put(extensionPropertyAnnotation.name(), extensionPropertyAnnotation.value());
+        Map<String, Object> extensions = null;
+        if (extensionAnnotations.length > 0) {
+            extensions = new HashMap<>();
+            for (Extension extensionAnnotation : extensionAnnotations) {
+                Map<String, String> extensionProperties = new HashMap<>();
+                for (ExtensionProperty extensionPropertyAnnotation : extensionAnnotation.properties()) {
+                    extensionProperties.put(extensionPropertyAnnotation.name(), extensionPropertyAnnotation.value());
+                }
+                extensions.put("x-" + extensionAnnotation.name(), extensionProperties);
             }
-            extensions.put(extensionAnnotation.name(), extensionProperties);
         }
         return extensions;
     }
