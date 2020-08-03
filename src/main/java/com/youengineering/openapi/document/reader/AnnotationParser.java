@@ -9,10 +9,7 @@ import io.swagger.v3.oas.models.ExternalDocumentation;
 import io.swagger.v3.oas.models.examples.Example;
 import io.swagger.v3.oas.models.headers.Header;
 import io.swagger.v3.oas.models.links.Link;
-import io.swagger.v3.oas.models.media.Content;
-import io.swagger.v3.oas.models.media.Encoding;
-import io.swagger.v3.oas.models.media.MediaType;
-import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.media.*;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
@@ -88,11 +85,28 @@ public class AnnotationParser {
 
     static MediaType parseMediaType(io.swagger.v3.oas.annotations.media.Content contentAnnotation) {
         MediaType mediaType = new MediaType();
-        mediaType.setSchema(parseSchema(contentAnnotation.schema()));
+        Schema<?> schema;
+        if (contentAnnotation.array().schema().implementation() != Void.class) {
+            schema = parseArraySchema(contentAnnotation.array());
+        } else {
+            schema = parseSchema(contentAnnotation.schema());
+        }
+        mediaType.setSchema(schema);
         mediaType.setExamples(parseExamples(contentAnnotation.examples()));
         mediaType.setEncoding(parseEncodings(contentAnnotation.encoding()));
         mediaType.setExtensions(parseExtensions(contentAnnotation.extensions()));
         return mediaType;
+    }
+
+    static ArraySchema parseArraySchema(io.swagger.v3.oas.annotations.media.ArraySchema arraySchemaAnnotation) {
+        ArraySchema arraySchema = new ArraySchema();
+        arraySchema.setItems(parseSchema(arraySchemaAnnotation.schema()));
+        arraySchema.setMinItems(arraySchema.getMinItems());
+        arraySchema.setMaxItems(arraySchema.getMaxItems());
+        arraySchema.setUniqueItems(arraySchema.getUniqueItems());
+        arraySchema.setExtensions(parseExtensions(arraySchemaAnnotation.extensions()));
+        readSchema(arraySchemaAnnotation.arraySchema(), arraySchema);
+        return arraySchema;
     }
 
     static Schema<?> parseSchema(io.swagger.v3.oas.annotations.media.Schema schemaAnnotation) {
@@ -104,16 +118,21 @@ public class AnnotationParser {
         } else {
             schema = new Schema<>();
         }
+        readSchema(schemaAnnotation, schema);
+        return schema;
+    }
+
+    private static void readSchema(io.swagger.v3.oas.annotations.media.Schema schemaAnnotation, Schema<?> targetSchema) {
         String name = schemaAnnotation.name();
         if (!name.isEmpty()) {
-            schema.setName(name);
+            targetSchema.setName(name);
         }
         String description = schemaAnnotation.description();
         if (!description.isEmpty()) {
-            schema.setDescription(description);
+            targetSchema.setDescription(description);
         }
+        targetSchema.setExtensions(parseExtensions(schemaAnnotation.extensions()));
         // TODO: Map rest of properties
-        return schema;
     }
 
     static Map<String, Example> parseExamples(ExampleObject[] exampleObjectAnnotations) {

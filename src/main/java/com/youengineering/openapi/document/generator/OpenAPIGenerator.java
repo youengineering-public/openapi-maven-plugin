@@ -19,7 +19,9 @@ public class OpenAPIGenerator {
     public OpenAPI generateOpenAPI(AbstractReader reader) throws GenerateException {
         OpenAPI openAPI = new OpenAPI();
         openAPI.setInfo(contentConfig.getInfo());
-        openAPI.addServersItem(new Server().url(contentConfig.getServerUrl()));
+        if (contentConfig.getServerUrl() != null) {
+            openAPI.addServersItem(new Server().url(contentConfig.getServerUrl()));
+        }
         openAPI.setExternalDocs(contentConfig.getExternalDocs());
         Components components = new Components();
         if (contentConfig.getSecurityDefinitionsPath() != null) {
