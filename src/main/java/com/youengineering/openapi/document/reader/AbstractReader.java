@@ -25,7 +25,6 @@ import io.swagger.v3.oas.models.parameters.RequestBody;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
-import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.tags.Tag;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.apache.maven.plugin.logging.Log;
@@ -39,7 +38,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static org.springframework.core.annotation.AnnotatedElementUtils.findMergedAnnotation;
 import static org.springframework.core.annotation.AnnotationUtils.findAnnotation;
@@ -132,7 +130,7 @@ public abstract class AbstractReader {
         return hasValidAnnotation;
     }
 
-    protected ResolvedParameter getParameters(Type type, List<Annotation> annotations, Components components) {
+    private ResolvedParameter getParameters(Type type, List<Annotation> annotations, Components components) {
         return getParameters(type, annotations, new HashSet<>(), components, new String[0], new String[0], null);
     }
 
@@ -154,6 +152,9 @@ public abstract class AbstractReader {
         if (!resolvedParameter.parameters.isEmpty()) {
             for (Parameter parameter : resolvedParameter.parameters) {
                 ParameterProcessor.applyAnnotations(parameter, type, annotations, components, classTypes, methodTypes, jsonViewAnnotation);
+                if (containsJavaDeprecated(annotations)) {
+                    parameter.setDeprecated(true);
+                }
             }
         } else {
             log.debug("Looking for body params in " + cls);
@@ -161,10 +162,17 @@ public abstract class AbstractReader {
                 Parameter param = ParameterProcessor.applyAnnotations(null, type, annotations, components, classTypes, methodTypes, jsonViewAnnotation);
                 if (param != null) {
                     resolvedParameter.requestBody = param;
+                    if (containsJavaDeprecated(annotations)) {
+                        resolvedParameter.requestBody.setDeprecated(true);
+                    }
                 }
             }
         }
         return resolvedParameter;
+    }
+
+    private boolean containsJavaDeprecated(List<Annotation> annotations) {
+        return annotations.stream().anyMatch(annotation -> annotation.annotationType() == Deprecated.class);
     }
 
     private boolean isApiParamHidden(List<Annotation> parameterAnnotations) {
@@ -177,7 +185,7 @@ public abstract class AbstractReader {
         return false;
     }
 
-    private void processOperationDecorator(Operation operation, Method method) {
+    private void decorateOperation(Operation operation, Method method) {
         final Iterator<OpenAPIExtension> chain = OpenAPIExtensions.chain();
         if (chain.hasNext()) {
             OpenAPIExtension extension = chain.next();
@@ -186,46 +194,29 @@ public abstract class AbstractReader {
     }
 
     protected Operation parseAndAddMethod(OpenAPI openAPI, Class<?> clazz, Method method, String httpMethodName, String fullPath, Collection<Parameter> parentParameters) {
-        Operation operation = new Operation();
-
-        String operationId = generateOperationId(method, httpMethodName);
-        ApiResponses responses = new ApiResponses();
-        List<io.swagger.v3.oas.annotations.security.SecurityRequirement> securityRequirementAnnotations = new LinkedList<>();
-
+        Operation operation;
         io.swagger.v3.oas.annotations.Operation operationAnnotation = findMergedAnnotation(method, io.swagger.v3.oas.annotations.Operation.class);
         if (operationAnnotation != null) {
-            if (operationAnnotation.hidden()) {
+            operation = AnnotationParser.parseOperation(operationAnnotation);
+            if (operation == null) {
                 return null;
             }
-            if (!operationAnnotation.operationId().isEmpty()) {
-                operationId = operationAnnotation.operationId();
-            }
+        } else {
+            operation = new Operation();
+            operation.setResponses(new ApiResponses());
+        }
 
-            operation.setSummary(operationAnnotation.summary());
-            operation.setDescription(operationAnnotation.description());
-
-            for (io.swagger.v3.oas.annotations.servers.Server serverAnnotation : operationAnnotation.servers()) {
-                Server server = AnnotationParser.parseServer(serverAnnotation);
-                operation.addServersItem(server);
-            }
-
-            for (String tag : operationAnnotation.tags()) {
-                operation.addTagsItem(tag);
-            }
-
-            securityRequirementAnnotations.addAll(Arrays.asList(operationAnnotation.security()));
-
-            operation.setExtensions(AnnotationParser.parseExtensions(operationAnnotation.extensions()));
-
-            responses = AnnotationParser.parseApiResponses(operationAnnotation.responses());
+        if (operation.getOperationId() == null) {
+            operation.setOperationId(generateOperationId(method, httpMethodName));
         }
 
         io.swagger.v3.oas.annotations.responses.ApiResponses apiResponsesAnnotation = findMergedAnnotation(method, io.swagger.v3.oas.annotations.responses.ApiResponses.class);
         if (apiResponsesAnnotation != null) {
-            responses = AnnotationParser.parseApiResponses(apiResponsesAnnotation.value());
+            ApiResponses additionalApiResponses = AnnotationParser.parseApiResponses(apiResponsesAnnotation.value());
+            operation.getResponses().putAll(additionalApiResponses);
         }
 
-        operation.setOperationId(operationId);
+        // Tags (from class and method)
 
         List<io.swagger.v3.oas.annotations.tags.Tag> tagAnnotations = new LinkedList<>();
         tagAnnotations.addAll(getTagAnnotations(clazz));
@@ -242,75 +233,34 @@ public abstract class AbstractReader {
             }
         }
 
+        // SecurityRequirements (from class and method)
+
+        List<io.swagger.v3.oas.annotations.security.SecurityRequirement> securityRequirementAnnotations = new LinkedList<>();
         securityRequirementAnnotations.addAll(getSecurityRequirementAnnotations(clazz));
         securityRequirementAnnotations.addAll(getSecurityRequirementAnnotations(method));
-        List<SecurityRequirement> securityRequirements = securityRequirementAnnotations.stream()
-                .map(AnnotationParser::parseSecurityRequirement)
-                .collect(Collectors.toList());
-        operation.setSecurity(securityRequirements);
+        for (io.swagger.v3.oas.annotations.security.SecurityRequirement securityRequirementAnnotation : securityRequirementAnnotations) {
+            SecurityRequirement securityRequirement = AnnotationParser.parseSecurityRequirement(securityRequirementAnnotation);
+            operation.addSecurityItem(securityRequirement);
+        }
 
-        // TODO: Use
+        // Parameters (from code)
+
+        // TODO: Use consumes
         Set<String> requestMediaTypes = new HashSet<>();
         requestMediaTypes.addAll(getConsumes(clazz));
         requestMediaTypes.addAll(getConsumes(method));
 
-        Set<String> responseMediaTypes = new HashSet<>();
-        responseMediaTypes.addAll(getProduces(clazz));
-        responseMediaTypes.addAll(getProduces(method));
-        if (responseMediaTypes.isEmpty()) {
-            responseMediaTypes.add("application/json");
-        }
-
-        String responseCode = "200";
-        // TODO: An improvement would be to support generating the schema from code and enrich it with the info from the annotation
-        if (!responses.containsKey(responseCode)) {
-            Type responseType = resolveResponseType(method.getGenericReturnType());
-            if (!responseType.equals(Void.class) && !responseType.equals(void.class) && hasResponseContent(responseType, method, httpMethodName)) {
-                ApiResponse response = new ApiResponse();
-                response.setDescription("");
-                Content content = new Content();
-                ResolvedSchema resolvedSchema = TypeUtil.getResolvedSchema(responseType);
-                for (String responseMediaType : responseMediaTypes) {
-                    MediaType mediaType = content.computeIfAbsent(responseMediaType, mt -> new MediaType());
-                    mediaType.setSchema(resolvedSchema.schema);
-                }
-                response.setContent(content);
-                for (Map.Entry<String, Schema> referencedSchemaEntry : resolvedSchema.referencedSchemas.entrySet()) {
-                    if (referencedSchemaEntry.getValue() != resolvedSchema.schema) {
-                        openAPI.getComponents().addSchemas(referencedSchemaEntry.getKey(), referencedSchemaEntry.getValue());
-                    }
-                }
-                responses.put(responseCode, response);
-            }
-        }
-
-        operation.setResponses(responses);
-
-        Map<Integer, String> responseDescriptions = getResponseDescriptions(method);
-        updateResponseStatiDescriptions(operation, responseDescriptions);
-
-        if (operation.getResponses().isEmpty()) {
-            operation.getResponses().put("default", new ApiResponse().description("successful operation"));
-        }
-
-        if (findAnnotation(method, Deprecated.class) != null) {
-            operation.setDeprecated(true);
-        }
-
-        // Process parameters
-
         for (Parameter parentParameter : parentParameters) {
-            operation.addParametersItem(parentParameter);
+            addParameterIfNotExisting(operation, parentParameter);
         }
 
-        Class<?>[] parameterTypes = method.getParameterTypes();
         Type[] genericParameterTypes = method.getGenericParameterTypes();
         Annotation[][] paramAnnotations = AnnotatedMethodService.findAllParamAnnotations(method);
 
         DefaultParameterNameDiscoverer parameterNameDiscoverer = new DefaultParameterNameDiscoverer();
         String[] defaultParameterNames = parameterNameDiscoverer.getParameterNames(method);
 
-        for (int i = 0; i < parameterTypes.length; i++) {
+        for (int i = 0; i < genericParameterTypes.length; i++) {
             Type type = genericParameterTypes[i];
             List<Annotation> annotations = Arrays.asList(paramAnnotations[i]);
             ResolvedParameter resolvedParameter = getParameters(type, annotations, openAPI.getComponents());
@@ -319,7 +269,7 @@ public abstract class AbstractReader {
                 if (StringUtils.isEmpty(parameter.getName())) {
                     parameter.setName(defaultParameterNames[i]);
                 }
-                operation.addParametersItem(parameter);
+                addParameterIfNotExisting(operation, parameter);
             }
 
             if (resolvedParameter.requestBody != null) {
@@ -339,7 +289,52 @@ public abstract class AbstractReader {
             }
         }
 
-        processOperationDecorator(operation, method);
+        // Responses (from code)
+
+        Set<String> responseMediaTypes = new HashSet<>();
+        responseMediaTypes.addAll(getProduces(clazz));
+        responseMediaTypes.addAll(getProduces(method));
+        if (responseMediaTypes.isEmpty()) {
+            responseMediaTypes.add("application/json");
+        }
+
+        String responseCode = "200";
+        // TODO: An improvement would be to support generating the schema from code and enrich it with the info from the annotation
+        if (!operation.getResponses().containsKey(responseCode)) {
+            Type responseType = resolveResponseType(method.getGenericReturnType());
+            if (!responseType.equals(Void.class) && !responseType.equals(void.class) && hasResponseContent(responseType, method, httpMethodName)) {
+                ApiResponse response = new ApiResponse();
+                response.setDescription("");
+                Content content = new Content();
+                ResolvedSchema resolvedSchema = TypeUtil.getResolvedSchema(responseType);
+                for (String responseMediaType : responseMediaTypes) {
+                    MediaType mediaType = content.computeIfAbsent(responseMediaType, mt -> new MediaType());
+                    mediaType.setSchema(resolvedSchema.schema);
+                }
+                response.setContent(content);
+                for (Map.Entry<String, Schema> referencedSchemaEntry : resolvedSchema.referencedSchemas.entrySet()) {
+                    if (referencedSchemaEntry.getValue() != resolvedSchema.schema) {
+                        openAPI.getComponents().addSchemas(referencedSchemaEntry.getKey(), referencedSchemaEntry.getValue());
+                    }
+                }
+                operation.getResponses().put(responseCode, response);
+            }
+        }
+
+        Map<Integer, String> responseDescriptions = getResponseDescriptions(method);
+        updateResponseStatiDescriptions(operation, responseDescriptions);
+
+        if (operation.getResponses().isEmpty()) {
+            operation.getResponses().put("default", new ApiResponse().description("successful operation"));
+        }
+
+        if (findAnnotation(method, Deprecated.class) != null) {
+            operation.setDeprecated(true);
+        }
+
+        // Decorate
+
+        decorateOperation(operation, method);
 
         // Add operation
 
@@ -393,7 +388,18 @@ public abstract class AbstractReader {
         );
     }
 
-    protected void updateResponseStatiDescriptions(Operation operation, Map<Integer, String> responseDescriptions) {
+    private void addParameterIfNotExisting(Operation operation, Parameter parameter) {
+        if (operation.getParameters() != null) {
+            for (Parameter existingParameter : operation.getParameters()) {
+                if (existingParameter.getName().equals(parameter.getName())) {
+                    return;
+                }
+            }
+        }
+        operation.addParametersItem(parameter);
+    }
+
+    private void updateResponseStatiDescriptions(Operation operation, Map<Integer, String> responseDescriptions) {
         ApiResponses responses = operation.getResponses();
         for (Map.Entry<Integer, String> responseDescriptionEntry : responseDescriptions.entrySet()) {
             Integer code = responseDescriptionEntry.getKey();

@@ -14,116 +14,6 @@ info:
 servers:
   - url: https://www.example.com:8080/api
 paths:
-  /pet/test/testingArrayResponse:
-    get:
-      summary: testingArrayResponse
-      description: ""
-      operationId: TestResource_testingArrayResponse_get
-      responses:
-        default:
-          description: ""
-          content:
-            '*/*':
-              schema:
-                uniqueItems: false
-                type: array
-                items:
-                  required:
-                    - name
-                    - photoUrls
-                  type: object
-                  properties:
-                    id:
-                      $ref: '#/components/schemas/PetId'
-                    category:
-                      $ref: '#/components/schemas/Category'
-                    name:
-                      $ref: '#/components/schemas/PetName'
-                    photoUrls:
-                      type: array
-                      xml:
-                        wrapped: true
-                      items:
-                        type: string
-                        xml:
-                          name: photoUrl
-                    tags:
-                      type: array
-                      xml:
-                        wrapped: true
-                      items:
-                        $ref: '#/components/schemas/Tag'
-                    status:
-                      type: string
-                      description: pet status in the store
-                      enum:
-                        - available,pending,sold
-                  xml:
-                    name: Pet
-      security: []
-  /pet/test/testingVendorExtensions:
-    get:
-      summary: testingVendorExtensions
-      description: ""
-      operationId: TestResource_testingVendorExtensions_get
-      responses:
-        default:
-          description: successful operation
-      security: []
-  /pet/pets/{petName}:
-    get:
-      summary: Finds Pets by name
-      description: ""
-      operationId: TestResource_findPetByPetName_get
-      parameters:
-        - name: petName
-          in: path
-          description: petName
-          required: true
-          schema:
-            pattern: '[^/]*'
-            type: string
-      responses:
-        default:
-          description: ""
-          content:
-            '*/*':
-              schema:
-                required:
-                  - name
-                  - photoUrls
-                type: object
-                properties:
-                  id:
-                    $ref: '#/components/schemas/PetId'
-                  category:
-                    $ref: '#/components/schemas/Category'
-                  name:
-                    $ref: '#/components/schemas/PetName'
-                  photoUrls:
-                    type: array
-                    xml:
-                      wrapped: true
-                    items:
-                      type: string
-                      xml:
-                        name: photoUrl
-                  tags:
-                    type: array
-                    xml:
-                      wrapped: true
-                    items:
-                      $ref: '#/components/schemas/Tag'
-                  status:
-                    type: string
-                    description: pet status in the store
-                    enum:
-                      - available,pending,sold
-                xml:
-                  name: Pet
-        "400":
-          description: Invalid pet name
-      security: []
   /pet/{petId}:
     get:
       summary: Find pet by ID
@@ -183,10 +73,9 @@ paths:
           description: Invalid ID supplied
         "404":
           description: Pet not found
-      security: []
+      deprecated: false
     post:
       summary: Updates a pet in the store with form data
-      description: ""
       operationId: TestResource_updatePetWithForm_post
       parameters:
         - name: petId
@@ -235,10 +124,9 @@ paths:
       responses:
         "405":
           description: Invalid input
-      security: []
+      deprecated: false
     delete:
       summary: Deletes a pet
-      description: ""
       operationId: TestResource_deletePet_delete
       parameters:
         - name: api_key
@@ -255,70 +143,10 @@ paths:
       responses:
         "400":
           description: Invalid pet value
-      security: []
-  /pet/findByStatus:
-    get:
-      summary: Finds Pets by status
-      description: Multiple status values can be provided with comma seperated strings
-      operationId: TestResource_findPetsByStatus_get
-      parameters:
-        - name: status
-          in: query
-          description: Status values that need to be considered for filter
-          required: true
-          schema:
-            type: string
-            default: available
-            enum:
-              - available,pending,sold
-      responses:
-        default:
-          description: ""
-          content:
-            '*/*':
-              schema:
-                uniqueItems: false
-                type: array
-                items:
-                  required:
-                    - name
-                    - photoUrls
-                  type: object
-                  properties:
-                    id:
-                      $ref: '#/components/schemas/PetId'
-                    category:
-                      $ref: '#/components/schemas/Category'
-                    name:
-                      $ref: '#/components/schemas/PetName'
-                    photoUrls:
-                      type: array
-                      xml:
-                        wrapped: true
-                      items:
-                        type: string
-                        xml:
-                          name: photoUrl
-                    tags:
-                      type: array
-                      xml:
-                        wrapped: true
-                      items:
-                        $ref: '#/components/schemas/Tag'
-                    status:
-                      type: string
-                      description: pet status in the store
-                      enum:
-                        - available,pending,sold
-                  xml:
-                    name: Pet
-        "400":
-          description: Invalid status value
-      security: []
+      deprecated: false
   /pet:
     get:
       summary: Returns pet
-      description: ""
       operationId: TestResource_get_get
       responses:
         "200":
@@ -392,10 +220,9 @@ paths:
                       - available,pending,sold
                 xml:
                   name: Pet
-      security: []
+      deprecated: false
     put:
       summary: Update an existing pet
-      description: ""
       operationId: TestResource_updatePet_put
       requestBody:
         description: Pet object that needs to be added to the store
@@ -448,10 +275,9 @@ paths:
           description: Pet not found
         "405":
           description: Invalid input
-      security: []
+      deprecated: false
     post:
       summary: Add a new pet to the store
-      description: ""
       operationId: TestResource_addPet_post
       requestBody:
         description: Pet object that needs to be added to the store
@@ -500,28 +326,119 @@ paths:
                   name: Pet
         "405":
           description: Invalid input
-      security: []
-  /pet/test/extensions:
+      deprecated: false
+  /pet/pets/{petName}:
     get:
-      summary: testExtensions
-      description: ""
-      operationId: TestResource_testingExtensions_get
+      summary: Finds Pets by name
+      operationId: TestResource_findPetByPetName_get
+      parameters:
+        - name: petName
+          in: path
+          description: petName
+          required: true
+          schema:
+            pattern: '[^/]*'
+            type: string
       responses:
-        "200":
+        default:
           description: ""
           content:
-            application/xml:
+            '*/*':
               schema:
-                type: string
-            application/json:
+                required:
+                  - name
+                  - photoUrls
+                type: object
+                properties:
+                  id:
+                    $ref: '#/components/schemas/PetId'
+                  category:
+                    $ref: '#/components/schemas/Category'
+                  name:
+                    $ref: '#/components/schemas/PetName'
+                  photoUrls:
+                    type: array
+                    xml:
+                      wrapped: true
+                    items:
+                      type: string
+                      xml:
+                        name: photoUrl
+                  tags:
+                    type: array
+                    xml:
+                      wrapped: true
+                    items:
+                      $ref: '#/components/schemas/Tag'
+                  status:
+                    type: string
+                    description: pet status in the store
+                    enum:
+                      - available,pending,sold
+                xml:
+                  name: Pet
+        "400":
+          description: Invalid pet name
+      deprecated: false
+  /pet/findByStatus:
+    get:
+      summary: Finds Pets by status
+      description: Multiple status values can be provided with comma seperated strings
+      operationId: TestResource_findPetsByStatus_get
+      parameters:
+        - name: status
+          in: query
+          description: Status values that need to be considered for filter
+          required: true
+          schema:
+            type: string
+            default: available
+            enum:
+              - available,pending,sold
+      responses:
+        default:
+          description: ""
+          content:
+            '*/*':
               schema:
-                type: string
-      security: []
-      x-:
-        extensionName3: extensionValue3
-      x-firstExtension:
-        extensionName2: extensionValue2
-        extensionName1: extensionValue1
+                uniqueItems: false
+                type: array
+                items:
+                  required:
+                    - name
+                    - photoUrls
+                  type: object
+                  properties:
+                    id:
+                      $ref: '#/components/schemas/PetId'
+                    category:
+                      $ref: '#/components/schemas/Category'
+                    name:
+                      $ref: '#/components/schemas/PetName'
+                    photoUrls:
+                      type: array
+                      xml:
+                        wrapped: true
+                      items:
+                        type: string
+                        xml:
+                          name: photoUrl
+                    tags:
+                      type: array
+                      xml:
+                        wrapped: true
+                      items:
+                        $ref: '#/components/schemas/Tag'
+                    status:
+                      type: string
+                      description: pet status in the store
+                      enum:
+                        - available,pending,sold
+                  xml:
+                    name: Pet
+        "400":
+          description: Invalid status value
+      deprecated: false
   /pet/findByTags:
     get:
       summary: Finds Pets by tags
@@ -579,7 +496,6 @@ paths:
         "400":
           description: Invalid tag value
       deprecated: true
-      security: []
   /pet/findAll:
     get:
       summary: Finds all Pets
@@ -636,11 +552,10 @@ paths:
                     name: Pet
         "400":
           description: Invalid page number value
-      security: []
+      deprecated: false
   /pet/{petId}/testInjectParam:
     post:
       summary: Updates a pet in the store with form data
-      description: ""
       operationId: TestResource_updatePetWithFormViaInjectParam_post
       parameters:
         - name: petId
@@ -689,11 +604,84 @@ paths:
       responses:
         "405":
           description: Invalid input
-      security: []
+      deprecated: false
+  /pet/test/extensions:
+    get:
+      summary: testExtensions
+      operationId: TestResource_testingExtensions_get
+      responses:
+        "200":
+          description: ""
+          content:
+            application/xml:
+              schema:
+                type: string
+            application/json:
+              schema:
+                type: string
+      deprecated: false
+      x-:
+        extensionName3: extensionValue3
+      x-firstExtension:
+        extensionName2: extensionValue2
+        extensionName1: extensionValue1
+  /pet/test/testingArrayResponse:
+    get:
+      summary: testingArrayResponse
+      operationId: TestResource_testingArrayResponse_get
+      responses:
+        default:
+          description: ""
+          content:
+            '*/*':
+              schema:
+                uniqueItems: false
+                type: array
+                items:
+                  required:
+                    - name
+                    - photoUrls
+                  type: object
+                  properties:
+                    id:
+                      $ref: '#/components/schemas/PetId'
+                    category:
+                      $ref: '#/components/schemas/Category'
+                    name:
+                      $ref: '#/components/schemas/PetName'
+                    photoUrls:
+                      type: array
+                      xml:
+                        wrapped: true
+                      items:
+                        type: string
+                        xml:
+                          name: photoUrl
+                    tags:
+                      type: array
+                      xml:
+                        wrapped: true
+                      items:
+                        $ref: '#/components/schemas/Tag'
+                    status:
+                      type: string
+                      description: pet status in the store
+                      enum:
+                        - available,pending,sold
+                  xml:
+                    name: Pet
+      deprecated: false
+  /pet/test/testingVendorExtensions:
+    get:
+      summary: testingVendorExtensions
+      operationId: TestResource_testingVendorExtensions_get
+      responses:
+        default:
+          description: successful operation
+      deprecated: false
   /pet/test:
     get:
       summary: Returns pet
-      description: ""
       operationId: TestResource_test_get
       parameters:
         - name: pet
@@ -773,7 +761,7 @@ paths:
                       - available,pending,sold
                 xml:
                   name: Pet
-      security: []
+      deprecated: false
 components:
   schemas:
     Category:

@@ -14,40 +14,6 @@ info:
 servers:
   - url: https://www.example.com:8080/api
 paths:
-  /responses/annotationOperation:
-    get:
-      summary: ""
-      description: ""
-      operationId: TestResponsesController_testAnnotationOperation_get
-      responses:
-        "200":
-          description: ""
-          content:
-            '*/*':
-              schema:
-                type: object
-                properties:
-                  text:
-                    type: string
-                  inner:
-                    $ref: '#/components/schemas/TestInnerResponse'
-      security: []
-  /responses/annotationApiResponses:
-    get:
-      operationId: TestResponsesController_testAnnotationApiResponses_get
-      responses:
-        "200":
-          description: ""
-          content:
-            '*/*':
-              schema:
-                type: object
-                properties:
-                  text:
-                    type: string
-                  inner:
-                    $ref: '#/components/schemas/TestInnerResponse'
-      security: []
   /mapping/post:
     post:
       operationId: TestMappingController_testPost_post
@@ -68,7 +34,6 @@ paths:
                     type: string
                   inner:
                     $ref: '#/components/schemas/TestInnerResponse'
-      security: []
   /mapping/get:
     get:
       operationId: TestMappingController_testGet_get
@@ -85,10 +50,9 @@ paths:
             application/json:
               schema:
                 type: string
-      security: []
-  /array/objectListWithoutAnnotations:
+  /array/primitiveArrayWithoutAnnotations:
     get:
-      operationId: TestArrayController_testObjectListWithoutAnnotations_get
+      operationId: TestArrayController_testPrimitiveArrayWithoutAnnotations_get
       responses:
         "200":
           description: ""
@@ -98,13 +62,22 @@ paths:
                 uniqueItems: false
                 type: array
                 items:
-                  type: object
-                  properties:
-                    text:
-                      type: string
-                    inner:
-                      $ref: '#/components/schemas/TestInnerResponse'
-      security: []
+                  type: integer
+                  format: int32
+  /array/boxedArrayWithoutAnnotations:
+    get:
+      operationId: TestArrayController_testBoxedArrayWithoutAnnotations_get
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                uniqueItems: false
+                type: array
+                items:
+                  type: integer
+                  format: int32
   /array/objectArrayWithoutAnnotations:
     get:
       operationId: TestArrayController_testObjectArrayWithoutAnnotations_get
@@ -123,55 +96,6 @@ paths:
                       type: string
                     inner:
                       $ref: '#/components/schemas/TestInnerResponse'
-      security: []
-  /array/boxedSetWithoutAnnotations:
-    get:
-      operationId: TestArrayController_testBoxedSetWithoutAnnotations_get
-      responses:
-        "200":
-          description: ""
-          content:
-            application/json:
-              schema:
-                uniqueItems: true
-                type: array
-                items:
-                  type: number
-                  format: double
-      security: []
-  /array/listWithAnnotationApiResponses:
-    get:
-      operationId: TestArrayController_testListWithAnnotationApiResponses_get
-      responses:
-        "200":
-          description: ""
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    text:
-                      type: string
-                    inner:
-                      $ref: '#/components/schemas/TestInnerResponse'
-      security: []
-  /array/boxedArrayWithoutAnnotations:
-    get:
-      operationId: TestArrayController_testBoxedArrayWithoutAnnotations_get
-      responses:
-        "200":
-          description: ""
-          content:
-            application/json:
-              schema:
-                uniqueItems: false
-                type: array
-                items:
-                  type: integer
-                  format: int32
-      security: []
   /array/boxedListWithoutAnnotations:
     get:
       operationId: TestArrayController_testBoxedListWithoutAnnotations_get
@@ -186,7 +110,38 @@ paths:
                 items:
                   type: number
                   format: float
-      security: []
+  /array/objectListWithoutAnnotations:
+    get:
+      operationId: TestArrayController_testObjectListWithoutAnnotations_get
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                uniqueItems: false
+                type: array
+                items:
+                  type: object
+                  properties:
+                    text:
+                      type: string
+                    inner:
+                      $ref: '#/components/schemas/TestInnerResponse'
+  /array/boxedSetWithoutAnnotations:
+    get:
+      operationId: TestArrayController_testBoxedSetWithoutAnnotations_get
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                uniqueItems: true
+                type: array
+                items:
+                  type: number
+                  format: double
   /array/objectSetWithoutAnnotations:
     get:
       operationId: TestArrayController_testObjectSetWithoutAnnotations_get
@@ -205,31 +160,45 @@ paths:
                       type: string
                     inner:
                       $ref: '#/components/schemas/TestInnerResponse'
-      security: []
-  /array/primitiveArrayWithoutAnnotations:
+  /array/listWithAnnotationApiResponses:
     get:
-      operationId: TestArrayController_testPrimitiveArrayWithoutAnnotations_get
+      operationId: TestArrayController_testListWithAnnotationApiResponses_get
       responses:
         "200":
           description: ""
           content:
-            application/json:
+            '*/*':
               schema:
-                uniqueItems: false
                 type: array
                 items:
-                  type: integer
-                  format: int32
-      security: []
-  /echo/cookieValueExpectCookieName:
-    get:
-      summary: ""
-      description: ""
-      operationId: TestEchoController_cookieValueExpectCookieName_get
+                  type: object
+                  properties:
+                    text:
+                      type: string
+                    inner:
+                      $ref: '#/components/schemas/TestInnerResponse'
+  /deprecated/operationAnnotationJava:
+    post:
+      operationId: TestDeprecated_testDeprecatedOperationAnnotationJava_post
+      responses:
+        default:
+          description: successful operation
+      deprecated: true
+  /deprecated/operationAnnotationOpenAPI:
+    post:
+      operationId: TestDeprecated_testDeprecatedOperationAnnotationOpenAPI_post
+      responses:
+        default:
+          description: successful operation
+      deprecated: true
+  /deprecated/parameterAnnotationJava:
+    post:
+      operationId: TestDeprecated_testDeprecatedParameterAnnotationJava_post
       parameters:
-        - name: cookieValueName
-          in: cookie
+        - name: text
+          in: query
           required: true
+          deprecated: true
           schema:
             type: string
       responses:
@@ -239,16 +208,14 @@ paths:
             application/json:
               schema:
                 type: string
-      security: []
-  /echo/cookieValueExpectCookieValue:
-    get:
-      summary: ""
-      description: ""
-      operationId: TestEchoController_cookieValueExpectCookieValue_get
+  /deprecated/parameterAnnotationOpenAPI:
+    post:
+      operationId: TestDeprecated_testDeprecatedParameterAnnotation_post
       parameters:
-        - name: cookieValueValue
-          in: cookie
+        - name: text
+          in: query
           required: true
+          deprecated: true
           schema:
             type: string
       responses:
@@ -258,125 +225,73 @@ paths:
             application/json:
               schema:
                 type: string
-      security: []
-  /echo/pathVariableExpectVariableName/{pathVariableName}:
-    get:
-      summary: ""
-      description: ""
-      operationId: TestEchoController_pathVariableExpectVariableName_get
-      parameters:
-        - name: pathVariableName
-          in: path
-          required: true
-          schema:
-            type: string
+  /deprecated/apiResponseHeaderAnnotation:
+    post:
+      operationId: TestDeprecated_testDeprecatedApiResponseHeaderAnnotation_post
       responses:
         "200":
           description: ""
-          content:
-            application/json:
+          headers:
+            myHeader:
+              required: false
+              deprecated: true
               schema:
                 type: string
-      security: []
-  /echo/requestHeaderExpectHeaderName:
-    get:
-      summary: ""
-      description: ""
-      operationId: TestEchoController_requestHeaderExpectHeaderName_get
+          content:
+            '*/*':
+              schema:
+                type: string
+      deprecated: false
+  /parameters/annotationOperationParameter:
+    post:
+      operationId: TestParametersController_testAnnotationOperationParameter_post
       parameters:
-        - name: requestHeaderName
+        - name: myName
           in: header
-          required: true
+          description: myDescription
+          required: false
+          deprecated: false
+          allowEmptyValue: false
+          allowReserved: false
           schema:
             type: string
       responses:
-        "200":
-          description: ""
-          content:
-            application/json:
-              schema:
-                type: string
-      security: []
-  /echo/requestHeaderExpectHeaderValue:
+        default:
+          description: successful operation
+      deprecated: false
+  /responses/annotationOperation:
     get:
-      summary: ""
-      description: ""
-      operationId: TestEchoController_requestHeaderExpectHeaderValue_get
-      parameters:
-        - name: requestHeaderValue
-          in: header
-          required: true
-          schema:
-            type: string
+      operationId: TestResponsesController_testAnnotationOperation_get
       responses:
         "200":
           description: ""
           content:
-            application/json:
+            '*/*':
               schema:
-                type: string
-      security: []
-  /echo/cookieValueExpectParameterName:
+                type: object
+                properties:
+                  text:
+                    type: string
+                  inner:
+                    $ref: '#/components/schemas/TestInnerResponse'
+      deprecated: false
+  /responses/annotationApiResponses:
     get:
-      summary: ""
-      description: ""
-      operationId: TestEchoController_cookieValueExpectParameterName_get
-      parameters:
-        - name: parameterName
-          in: cookie
-          required: true
-          schema:
-            type: string
+      operationId: TestResponsesController_testAnnotationApiResponses_get
       responses:
         "200":
           description: ""
           content:
-            application/json:
+            '*/*':
               schema:
-                type: string
-      security: []
-  /echo/pathVariableExpectParameterName/{parameterName}:
-    get:
-      summary: ""
-      description: ""
-      operationId: TestEchoController_pathVariableExpectParameterName_get
-      parameters:
-        - name: parameterName
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: ""
-          content:
-            application/json:
-              schema:
-                type: string
-      security: []
-  /echo/requestHeaderExpectParameterName:
-    get:
-      summary: ""
-      description: ""
-      operationId: TestEchoController_requestHeaderExpectParameterName_get
-      parameters:
-        - name: parameterName
-          in: header
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: ""
-          content:
-            application/json:
-              schema:
-                type: string
-      security: []
+                type: object
+                properties:
+                  text:
+                    type: string
+                  inner:
+                    $ref: '#/components/schemas/TestInnerResponse'
   /echo/requestParamExpectParameterName:
     get:
-      summary: ""
-      description: ""
       operationId: TestEchoController_requestParamExpectParameterName_get
       parameters:
         - name: parameterName
@@ -391,30 +306,9 @@ paths:
             application/json:
               schema:
                 type: string
-      security: []
-  /echo/pathVariableExpectVariableValue/{pathVariableValue}:
-    get:
-      summary: ""
-      description: ""
-      operationId: TestEchoController_pathVariableExpectVariableValue_get
-      parameters:
-        - name: pathVariableValue
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: ""
-          content:
-            application/json:
-              schema:
-                type: string
-      security: []
+      deprecated: false
   /echo/requestParamExpectParamName:
     get:
-      summary: ""
-      description: ""
       operationId: TestEchoController_requestParamExpectParamName_get
       parameters:
         - name: requestParamName
@@ -429,11 +323,9 @@ paths:
             application/json:
               schema:
                 type: string
-      security: []
+      deprecated: false
   /echo/requestParamExpectParamValue:
     get:
-      summary: ""
-      description: ""
       operationId: TestEchoController_requestParamExpectParamValue_get
       parameters:
         - name: requestParamValue
@@ -448,15 +340,162 @@ paths:
             application/json:
               schema:
                 type: string
-      security: []
+      deprecated: false
+  /echo/requestHeaderExpectParameterName:
+    get:
+      operationId: TestEchoController_requestHeaderExpectParameterName_get
+      parameters:
+        - name: parameterName
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: string
+      deprecated: false
+  /echo/requestHeaderExpectHeaderName:
+    get:
+      operationId: TestEchoController_requestHeaderExpectHeaderName_get
+      parameters:
+        - name: requestHeaderName
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: string
+      deprecated: false
+  /echo/requestHeaderExpectHeaderValue:
+    get:
+      operationId: TestEchoController_requestHeaderExpectHeaderValue_get
+      parameters:
+        - name: requestHeaderValue
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: string
+      deprecated: false
+  /echo/cookieValueExpectParameterName:
+    get:
+      operationId: TestEchoController_cookieValueExpectParameterName_get
+      parameters:
+        - name: parameterName
+          in: cookie
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: string
+      deprecated: false
+  /echo/cookieValueExpectCookieName:
+    get:
+      operationId: TestEchoController_cookieValueExpectCookieName_get
+      parameters:
+        - name: cookieValueName
+          in: cookie
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: string
+      deprecated: false
+  /echo/cookieValueExpectCookieValue:
+    get:
+      operationId: TestEchoController_cookieValueExpectCookieValue_get
+      parameters:
+        - name: cookieValueValue
+          in: cookie
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: string
+      deprecated: false
+  /echo/pathVariableExpectParameterName/{parameterName}:
+    get:
+      operationId: TestEchoController_pathVariableExpectParameterName_get
+      parameters:
+        - name: parameterName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: string
+      deprecated: false
+  /echo/pathVariableExpectVariableName/{pathVariableName}:
+    get:
+      operationId: TestEchoController_pathVariableExpectVariableName_get
+      parameters:
+        - name: pathVariableName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: string
+      deprecated: false
+  /echo/pathVariableExpectVariableValue/{pathVariableValue}:
+    get:
+      operationId: TestEchoController_pathVariableExpectVariableValue_get
+      parameters:
+        - name: pathVariableValue
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: string
+      deprecated: false
 components:
   schemas:
-    TestInnerResponse:
-      type: object
-      properties:
-        number:
-          type: integer
-          format: int32
     TestRequestBody:
       type: object
       properties:
@@ -465,6 +504,12 @@ components:
           format: int32
         text:
           type: string
+    TestInnerResponse:
+      type: object
+      properties:
+        number:
+          type: integer
+          format: int32
     TestResponse:
       type: object
       properties:
