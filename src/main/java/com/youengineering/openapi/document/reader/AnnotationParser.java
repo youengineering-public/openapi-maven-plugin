@@ -28,49 +28,73 @@ import java.util.function.Function;
 
 class AnnotationParser {
 
-    static Operation parseOperation(io.swagger.v3.oas.annotations.Operation operationAnnotation) {
+    static AnnotationParserResult<Operation> parseOperation(io.swagger.v3.oas.annotations.Operation operationAnnotation) {
         if (operationAnnotation.hidden()) {
             return null;
         }
         Operation operation = new Operation();
+        Map<String, Schema> referencedSchemas = new HashMap<>();
         operation.setTags(parseTags(operationAnnotation.tags()));
         operation.setSummary(parseEmptyableText(operationAnnotation.summary()));
         operation.setDescription(parseEmptyableText(operationAnnotation.description()));
-        operation.setRequestBody(parseRequestBody(operationAnnotation.requestBody()));
+        AnnotationParserResult<RequestBody> requestBodyResult = parseRequestBody(operationAnnotation.requestBody());
+        operation.setRequestBody(requestBodyResult.getResult());
+        referencedSchemas.putAll(requestBodyResult.getReferencedSchemas());
         operation.setExternalDocs(parseExternalDocumentation(operationAnnotation.externalDocs()));
         operation.setOperationId(parseEmptyableText(operationAnnotation.operationId()));
-        operation.setParameters(parseParameters(operationAnnotation.parameters()));
-        operation.setResponses(parseApiResponses(operationAnnotation.responses()));
+        AnnotationParserResult<List<Parameter>> parametersResult = parseParameters(operationAnnotation.parameters());
+        operation.setParameters(parametersResult.getResult());
+        referencedSchemas.putAll(parametersResult.getReferencedSchemas());
+        AnnotationParserResult<ApiResponses> apiResponsesResult = parseApiResponses(operationAnnotation.responses());
+        operation.setResponses(apiResponsesResult.getResult());
+        referencedSchemas.putAll(apiResponsesResult.getReferencedSchemas());
         operation.setDeprecated(operationAnnotation.deprecated());
         operation.setSecurity(parseSecurityRequirements(operationAnnotation.security()));
         operation.setServers(parseServers(operationAnnotation.servers()));
         operation.setExtensions(parseExtensions(operationAnnotation.extensions()));
         // TODO: Read and use ignoreJsonView
-        return operation;
+        return new AnnotationParserResult<>(operation, referencedSchemas);
     }
 
-    private static RequestBody parseRequestBody(io.swagger.v3.oas.annotations.parameters.RequestBody requestBodyAnnotation) {
+    private static AnnotationParserResult<RequestBody> parseRequestBody(io.swagger.v3.oas.annotations.parameters.RequestBody requestBodyAnnotation) {
+        RequestBody requestBody = null;
+        Map<String, Schema> referencedSchemas = new HashMap<>();
         if (requestBodyAnnotation.content().length > 0) {
-            RequestBody requestBody = new RequestBody();
+            requestBody = new RequestBody();
             requestBody.setDescription(parseEmptyableText(requestBodyAnnotation.description()));
-            requestBody.setContent(parseContent(requestBodyAnnotation.content()));
+            AnnotationParserResult<Content> contentResult = parseContent(requestBodyAnnotation.content());
+            requestBody.setContent(contentResult.getResult());
+            referencedSchemas.putAll(contentResult.getReferencedSchemas());
             requestBody.setRequired(requestBodyAnnotation.required());
             requestBody.setExtensions(parseExtensions(requestBodyAnnotation.extensions()));
             requestBody.set$ref(parseEmptyableText(requestBodyAnnotation.ref()));
-            return requestBody;
+            return new AnnotationParserResult<>(requestBody, contentResult.getReferencedSchemas());
         }
-        return null;
+        return new AnnotationParserResult<>(requestBody, referencedSchemas);
     }
 
-    private static List<Parameter> parseParameters(io.swagger.v3.oas.annotations.Parameter[] parameterAnnotations) {
-        return parseList(parameterAnnotations, AnnotationParser::parseParameter);
+    private static AnnotationParserResult<List<Parameter>> parseParameters(io.swagger.v3.oas.annotations.Parameter[] parameterAnnotations) {
+        List<Parameter> parameters = null;
+        Map<String, Schema> referencedSchemas = new HashMap<>();
+        if (parameterAnnotations.length > 0) {
+            parameters = new ArrayList<>(parameterAnnotations.length);
+            for (io.swagger.v3.oas.annotations.Parameter parameterAnnotation : parameterAnnotations) {
+                AnnotationParserResult<Parameter> parameterResult = parseParameter(parameterAnnotation);
+                if (parameterResult != null) {
+                    parameters.add(parameterResult.getResult());
+                    referencedSchemas.putAll(parameterResult.getReferencedSchemas());
+                }
+            }
+        }
+        return new AnnotationParserResult<>(parameters, referencedSchemas);
     }
 
-    private static Parameter parseParameter(io.swagger.v3.oas.annotations.Parameter parameterAnnotation) {
+    private static AnnotationParserResult<Parameter> parseParameter(io.swagger.v3.oas.annotations.Parameter parameterAnnotation) {
         if (parameterAnnotation.hidden()) {
             return null;
         }
         Parameter parameter = new Parameter();
+        Map<String, Schema> referencedSchemas = new HashMap<>();
         parameter.setName(parseEmptyableText(parameterAnnotation.name()));
         parameter.setIn(parameterAnnotation.in().toString());
         parameter.setDescription(parseEmptyableText(parameterAnnotation.description()));
@@ -79,21 +103,23 @@ class AnnotationParser {
         parameter.setAllowEmptyValue(parameterAnnotation.allowEmptyValue());
         parameter.setExamples(parseExamples(parameterAnnotation.examples()));
         parameter.setExtensions(parseExtensions(parameterAnnotation.extensions()));
-        Content content = parseContent(parameterAnnotation.content());
-        if (content != null) {
-            parameter.setContent(content);
+        AnnotationParserResult<Content> contentResult = parseContent(parameterAnnotation.content());
+        referencedSchemas.putAll(contentResult.getReferencedSchemas());
+        if (contentResult.getResult() != null) {
+            parameter.setContent(contentResult.getResult());
         } else {
-            Schema<?> schema = parseSchema(parameterAnnotation.schema(), parameterAnnotation.array());
-            parameter.setSchema(schema);
+            AnnotationParserResult<? extends Schema<?>> schemaResult = parseSchema(parameterAnnotation.schema(), parameterAnnotation.array());
+            parameter.setSchema(schemaResult.getResult());
+            referencedSchemas.putAll(schemaResult.getReferencedSchemas());
             // "Ignored if the properties content or array are specified."
-            if (!(schema instanceof ArraySchema)) {
+            if (!(schemaResult.getResult() instanceof ArraySchema)) {
                 parameter.setStyle(parseParameterStyle(parameterAnnotation.style()));
                 parameter.setExplode(parseParameterExplode(parameterAnnotation.explode()));
                 parameter.setAllowReserved(parameterAnnotation.allowReserved());
                 parameter.setExample(parseEmptyableText(parameterAnnotation.example()));
             }
         }
-        return parameter;
+        return new AnnotationParserResult<>(parameter, referencedSchemas);
     }
 
     private static Parameter.StyleEnum parseParameterStyle(ParameterStyle parameterStyle) {
@@ -115,70 +141,85 @@ class AnnotationParser {
         }
     }
 
-    static ApiResponses parseApiResponses(io.swagger.v3.oas.annotations.responses.ApiResponse[] apiResponseAnnotations) {
+    static AnnotationParserResult<ApiResponses> parseApiResponses(io.swagger.v3.oas.annotations.responses.ApiResponse[] apiResponseAnnotations) {
         ApiResponses apiResponses = new ApiResponses();
+        Map<String, Schema> referencedSchemas = new HashMap<>();
         for (io.swagger.v3.oas.annotations.responses.ApiResponse apiResponseAnnotation : apiResponseAnnotations) {
             ApiResponse apiResponse = new ApiResponse();
             // Description is mandatory here -> Don't map empty to null
             apiResponse.setDescription(apiResponseAnnotation.description());
-            apiResponse.setHeaders(parseHeaders(apiResponseAnnotation.headers()));
-            apiResponse.setContent(parseContent(apiResponseAnnotation.content()));
+            AnnotationParserResult<Map<String, Header>> headersResult = parseHeaders(apiResponseAnnotation.headers());
+            apiResponse.setHeaders(headersResult.getResult());
+            referencedSchemas.putAll(headersResult.getReferencedSchemas());
+            AnnotationParserResult<Content> contentResult = parseContent(apiResponseAnnotation.content());
+            apiResponse.setContent(contentResult.getResult());
+            referencedSchemas.putAll(contentResult.getReferencedSchemas());
             apiResponse.setLinks(parseLinks(apiResponseAnnotation.links()));
             apiResponse.setExtensions(parseExtensions(apiResponseAnnotation.extensions()));
             apiResponse.set$ref(parseEmptyableText(apiResponseAnnotation.ref()));
             apiResponses.put(apiResponseAnnotation.responseCode(), apiResponse);
         }
-        return apiResponses;
+        return new AnnotationParserResult<>(apiResponses, referencedSchemas);
     }
 
-    private static Map<String, Header> parseHeaders(io.swagger.v3.oas.annotations.headers.Header[] headerAnnotations) {
+    private static AnnotationParserResult<Map<String, Header>> parseHeaders(io.swagger.v3.oas.annotations.headers.Header[] headerAnnotations) {
         Map<String, Header> headers = null;
+        Map<String, Schema> referencedSchemas = new HashMap<>();
         if (headerAnnotations.length > 0) {
             headers = new HashMap<>();
             for (io.swagger.v3.oas.annotations.headers.Header headerAnnotation : headerAnnotations) {
-                Header header = parseHeader(headerAnnotation);
-                headers.put(headerAnnotation.name(), header);
+                AnnotationParserResult<Header> headerResult = parseHeader(headerAnnotation);
+                headers.put(headerAnnotation.name(), headerResult.getResult());
+                referencedSchemas.putAll(headerResult.getReferencedSchemas());
             }
         }
-        return headers;
+        return new AnnotationParserResult<>(headers, referencedSchemas);
     }
 
-    private static Header parseHeader(io.swagger.v3.oas.annotations.headers.Header headerAnnotation) {
+    private static AnnotationParserResult<Header> parseHeader(io.swagger.v3.oas.annotations.headers.Header headerAnnotation) {
         Header header = new Header();
         header.setDescription(parseEmptyableText(headerAnnotation.description()));
-        header.setSchema(parseSchema(headerAnnotation.schema()));
+        AnnotationParserResult<Schema<?>> schemaResult = parseSchema(headerAnnotation.schema());
+        header.setSchema(schemaResult.getResult());
         header.setRequired(headerAnnotation.required());
         header.setDeprecated(headerAnnotation.deprecated());
         header.set$ref(parseEmptyableText(headerAnnotation.ref()));
-        return header;
+        return new AnnotationParserResult<>(header, schemaResult.getReferencedSchemas());
     }
 
-    private static Content parseContent(io.swagger.v3.oas.annotations.media.Content[] contentAnnotations) {
+    private static AnnotationParserResult<Content> parseContent(io.swagger.v3.oas.annotations.media.Content[] contentAnnotations) {
+        Content content = null;
+        Map<String, Schema> referencedSchemas = new HashMap<>();
         if (contentAnnotations.length > 0) {
-            Content content = new Content();
+            content = new Content();
             for (io.swagger.v3.oas.annotations.media.Content contentAnnotation : contentAnnotations) {
                 String mediaTypeKey = contentAnnotation.mediaType();
                 if (mediaTypeKey.isEmpty()) {
                     mediaTypeKey = "*/*";
                 }
-                MediaType mediaType = parseMediaType(contentAnnotation);
-                content.put(mediaTypeKey, mediaType);
+                AnnotationParserResult<MediaType> mediaTypeResult = parseMediaType(contentAnnotation);
+                content.put(mediaTypeKey, mediaTypeResult.getResult());
+                referencedSchemas.putAll(mediaTypeResult.getReferencedSchemas());
             }
-            return content;
         }
-        return null;
+        return new AnnotationParserResult<>(content, referencedSchemas);
     }
 
-    private static MediaType parseMediaType(io.swagger.v3.oas.annotations.media.Content contentAnnotation) {
+    private static AnnotationParserResult<MediaType> parseMediaType(io.swagger.v3.oas.annotations.media.Content contentAnnotation) {
         MediaType mediaType = new MediaType();
-        mediaType.setSchema(parseSchema(contentAnnotation.schema(), contentAnnotation.array()));
+        Map<String, Schema> referencedSchemas = new HashMap<>();
+        AnnotationParserResult<? extends Schema<?>> schemaResult = parseSchema(contentAnnotation.schema(), contentAnnotation.array());
+        mediaType.setSchema(schemaResult.getResult());
+        referencedSchemas.putAll(schemaResult.getReferencedSchemas());
         mediaType.setExamples(parseExamples(contentAnnotation.examples()));
-        mediaType.setEncoding(parseEncodings(contentAnnotation.encoding()));
+        AnnotationParserResult<Map<String, Encoding>> encodingsResult = parseEncodings(contentAnnotation.encoding());
+        mediaType.setEncoding(encodingsResult.getResult());
+        referencedSchemas.putAll(encodingsResult.getReferencedSchemas());
         mediaType.setExtensions(parseExtensions(contentAnnotation.extensions()));
-        return mediaType;
+        return new AnnotationParserResult<>(mediaType, referencedSchemas);
     }
 
-    private static Schema<?> parseSchema(io.swagger.v3.oas.annotations.media.Schema schemaAnnotation, io.swagger.v3.oas.annotations.media.ArraySchema arraySchemaAnnotation) {
+    private static AnnotationParserResult<? extends Schema<?>> parseSchema(io.swagger.v3.oas.annotations.media.Schema schemaAnnotation, io.swagger.v3.oas.annotations.media.ArraySchema arraySchemaAnnotation) {
         if (arraySchemaAnnotation.schema().implementation() != Void.class) {
             return parseArraySchema(arraySchemaAnnotation);
         } else {
@@ -186,28 +227,33 @@ class AnnotationParser {
         }
     }
 
-    private static ArraySchema parseArraySchema(io.swagger.v3.oas.annotations.media.ArraySchema arraySchemaAnnotation) {
+    private static AnnotationParserResult<ArraySchema> parseArraySchema(io.swagger.v3.oas.annotations.media.ArraySchema arraySchemaAnnotation) {
         ArraySchema arraySchema = new ArraySchema();
-        arraySchema.setItems(parseSchema(arraySchemaAnnotation.schema()));
+        AnnotationParserResult<Schema<?>> schemaResult = parseSchema(arraySchemaAnnotation.schema());
+        arraySchema.setItems(schemaResult.getResult());
         arraySchema.setMinItems(arraySchema.getMinItems());
         arraySchema.setMaxItems(arraySchema.getMaxItems());
         arraySchema.setUniqueItems(arraySchema.getUniqueItems());
         arraySchema.setExtensions(parseExtensions(arraySchemaAnnotation.extensions()));
         readSchema(arraySchemaAnnotation.arraySchema(), arraySchema);
-        return arraySchema;
+        return new AnnotationParserResult<>(arraySchema, schemaResult.getReferencedSchemas());
     }
 
-    private static Schema<?> parseSchema(io.swagger.v3.oas.annotations.media.Schema schemaAnnotation) {
+    private static AnnotationParserResult<Schema<?>> parseSchema(io.swagger.v3.oas.annotations.media.Schema schemaAnnotation) {
         Schema<?> schema;
+        Map<String, Schema> referencedSchemas;
         Class<?> implementation = schemaAnnotation.implementation();
         if (implementation != Void.class) {
             ResolvedSchema resolvedSchema = TypeUtil.getResolvedSchema(implementation);
             schema = resolvedSchema.schema;
+            referencedSchemas = resolvedSchema.referencedSchemas;
+
         } else {
             schema = new Schema<>();
+            referencedSchemas = new HashMap<>();
         }
         readSchema(schemaAnnotation, schema);
-        return schema;
+        return new AnnotationParserResult<>(schema, referencedSchemas);
     }
 
     private static void readSchema(io.swagger.v3.oas.annotations.media.Schema schemaAnnotation, Schema<?> targetSchema) {
@@ -240,27 +286,30 @@ class AnnotationParser {
         return example;
     }
 
-    private static Map<String, Encoding> parseEncodings(io.swagger.v3.oas.annotations.media.Encoding[] encodingAnnotations) {
+    private static AnnotationParserResult<Map<String, Encoding>> parseEncodings(io.swagger.v3.oas.annotations.media.Encoding[] encodingAnnotations) {
         Map<String, Encoding> encodings = null;
+        Map<String, Schema> referencedSchemas = new HashMap<>();
         if (encodingAnnotations.length > 0) {
             encodings = new HashMap<>();
             for (io.swagger.v3.oas.annotations.media.Encoding encodingAnnotation : encodingAnnotations) {
-                Encoding encoding = parseEncoding(encodingAnnotation);
-                encodings.put(encodingAnnotation.name(), encoding);
+                AnnotationParserResult<Encoding> encodingResult = parseEncoding(encodingAnnotation);
+                encodings.put(encodingAnnotation.name(), encodingResult.getResult());
+                referencedSchemas.putAll(encodingResult.getReferencedSchemas());
             }
         }
-        return encodings;
+        return new AnnotationParserResult<>(encodings, referencedSchemas);
     }
 
-    private static Encoding parseEncoding(io.swagger.v3.oas.annotations.media.Encoding encodingAnnotation) {
+    private static AnnotationParserResult<Encoding> parseEncoding(io.swagger.v3.oas.annotations.media.Encoding encodingAnnotation) {
         Encoding encoding = new Encoding();
         encoding.setContentType(parseEmptyableText(encodingAnnotation.contentType()));
-        encoding.setHeaders(parseHeaders(encodingAnnotation.headers()));
+        AnnotationParserResult<Map<String, Header>> headersResult = parseHeaders(encodingAnnotation.headers());
+        encoding.setHeaders(headersResult.getResult());
         // TODO: Map encoding.setStyle(encodingAnnotation.style());
         encoding.setExplode(encodingAnnotation.explode());
         encoding.setAllowReserved(encodingAnnotation.allowReserved());
         encoding.setExtensions(parseExtensions(encodingAnnotation.extensions()));
-        return encoding;
+        return new AnnotationParserResult<>(encoding, headersResult.getReferencedSchemas());
     }
 
     private static Map<String, Link> parseLinks(io.swagger.v3.oas.annotations.links.Link[] linkAnnotations) {

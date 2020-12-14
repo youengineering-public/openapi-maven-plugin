@@ -194,13 +194,17 @@ public abstract class AbstractReader {
     }
 
     protected Operation parseAndAddMethod(OpenAPI openAPI, Class<?> clazz, Method method, String httpMethodName, String fullPath, Collection<Parameter> parentParameters) {
+        Map<String, Schema> referencedSchemas = new HashMap<>();
+
         Operation operation;
         io.swagger.v3.oas.annotations.Operation operationAnnotation = findMergedAnnotation(method, io.swagger.v3.oas.annotations.Operation.class);
         if (operationAnnotation != null) {
-            operation = AnnotationParser.parseOperation(operationAnnotation);
-            if (operation == null) {
+            AnnotationParserResult<Operation> operationResult = AnnotationParser.parseOperation(operationAnnotation);
+            if (operationResult == null) {
                 return null;
             }
+            operation = operationResult.getResult();
+            referencedSchemas.putAll(operationResult.getReferencedSchemas());
         } else {
             operation = new Operation();
             operation.setResponses(new ApiResponses());
@@ -212,8 +216,9 @@ public abstract class AbstractReader {
 
         io.swagger.v3.oas.annotations.responses.ApiResponses apiResponsesAnnotation = findMergedAnnotation(method, io.swagger.v3.oas.annotations.responses.ApiResponses.class);
         if (apiResponsesAnnotation != null) {
-            ApiResponses additionalApiResponses = AnnotationParser.parseApiResponses(apiResponsesAnnotation.value());
-            operation.getResponses().putAll(additionalApiResponses);
+            AnnotationParserResult<ApiResponses> apiResponsesResult = AnnotationParser.parseApiResponses(apiResponsesAnnotation.value());
+            operation.getResponses().putAll(apiResponsesResult.getResult());
+            referencedSchemas.putAll(apiResponsesResult.getReferencedSchemas());
         }
 
         // Tags (from class and method)
@@ -312,12 +317,8 @@ public abstract class AbstractReader {
                     mediaType.setSchema(resolvedSchema.schema);
                 }
                 response.setContent(content);
-                for (Map.Entry<String, Schema> referencedSchemaEntry : resolvedSchema.referencedSchemas.entrySet()) {
-                    if (referencedSchemaEntry.getValue() != resolvedSchema.schema) {
-                        openAPI.getComponents().addSchemas(referencedSchemaEntry.getKey(), referencedSchemaEntry.getValue());
-                    }
-                }
                 operation.getResponses().put(responseCode, response);
+                referencedSchemas.putAll(resolvedSchema.referencedSchemas);
             }
         }
 
@@ -341,6 +342,12 @@ public abstract class AbstractReader {
         PathItem path = openAPI.getPaths().computeIfAbsent(operationPath, op -> new PathItem());
         PathItem.HttpMethod httpMethod = PathItem.HttpMethod.valueOf(httpMethodName.toUpperCase());
         path.operation(httpMethod, operation);
+
+        // Referenced schemas
+
+        for (Map.Entry<String, Schema> referencedSchemaEntry : referencedSchemas.entrySet()) {
+            openAPI.getComponents().addSchemas(referencedSchemaEntry.getKey(), referencedSchemaEntry.getValue());
+        }
 
         return operation;
     }

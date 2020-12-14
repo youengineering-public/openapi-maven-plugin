@@ -8,7 +8,7 @@
             <plugin>
                 <groupId>com.youengineering</groupId>
                 <artifactId>openapi-maven-plugin</artifactId>
-                <version>0.0.8</version>
+                <version>0.0.9</version>
                 <configuration>
                     <sourcePackage>com.youengineering.openapi.samples.jaxrs</sourcePackage>
                     <framework>jaxrs</framework>
