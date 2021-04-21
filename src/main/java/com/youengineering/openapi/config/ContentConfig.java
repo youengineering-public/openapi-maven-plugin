@@ -13,6 +13,7 @@ public class ContentConfig {
     private String serverUrl;
     // Supported parameters: {{packageName}}, {{className}}, {{methodName}}, {{httpMethod}}
     private String operationIdFormat = "{{className}}_{{methodName}}_{{httpMethod}}";
+    private String defaultSuccessfulOperationDescription = "Successful operation";
     private String securityDefinitionsPath;
     private ExternalDocumentation externalDocs;
 

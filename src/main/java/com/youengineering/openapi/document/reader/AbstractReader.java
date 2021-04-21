@@ -309,7 +309,7 @@ public abstract class AbstractReader {
             Type responseType = resolveResponseType(method.getGenericReturnType());
             if (!responseType.equals(Void.class) && !responseType.equals(void.class) && hasResponseContent(responseType, method, httpMethodName)) {
                 ApiResponse response = new ApiResponse();
-                response.setDescription("");
+                response.setDescription(contentConfig.getDefaultSuccessfulOperationDescription());
                 Content content = new Content();
                 ResolvedSchema resolvedSchema = TypeUtil.getResolvedSchema(responseType);
                 for (String responseMediaType : responseMediaTypes) {
@@ -326,7 +326,7 @@ public abstract class AbstractReader {
         updateResponseStatiDescriptions(operation, responseDescriptions);
 
         if (operation.getResponses().isEmpty()) {
-            operation.getResponses().put("default", new ApiResponse().description("successful operation"));
+            operation.getResponses().put("default", new ApiResponse().description(contentConfig.getDefaultSuccessfulOperationDescription()));
         }
 
         if (findAnnotation(method, Deprecated.class) != null) {
