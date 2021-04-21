@@ -309,6 +309,7 @@ public abstract class AbstractReader {
             Type responseType = resolveResponseType(method.getGenericReturnType());
             if (!responseType.equals(Void.class) && !responseType.equals(void.class) && hasResponseContent(responseType, method, httpMethodName)) {
                 ApiResponse response = new ApiResponse();
+                // It's preferred to have a non-empty default description, as certain tools like io.swagger.parser.OpenAPIParser ignore empty strings, leading to a parsing error
                 response.setDescription(contentConfig.getDefaultSuccessfulOperationDescription());
                 Content content = new Content();
                 ResolvedSchema resolvedSchema = TypeUtil.getResolvedSchema(responseType);
