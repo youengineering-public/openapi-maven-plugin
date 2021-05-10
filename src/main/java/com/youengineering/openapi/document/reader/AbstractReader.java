@@ -227,14 +227,19 @@ public abstract class AbstractReader {
         tagAnnotations.addAll(getTagAnnotations(clazz));
         tagAnnotations.addAll(getTagAnnotations(method));
         for (io.swagger.v3.oas.annotations.tags.Tag tagAnnotation : tagAnnotations) {
-            operation.addTagsItem(tagAnnotation.name());
+            String tagName = tagAnnotation.name();
+            if ((operation.getTags() == null) || (!operation.getTags().contains(tagName))) {
+                operation.addTagsItem(tagName);
+            }
             if ((!tagAnnotation.description().isEmpty())
              || (!tagAnnotation.externalDocs().description().isEmpty())
              || (!tagAnnotation.externalDocs().url().isEmpty())
              || (tagAnnotation.externalDocs().extensions().length > 0)
              || (tagAnnotation.extensions().length > 0)) {
-                Tag tag = AnnotationParser.parseTag(tagAnnotation);
-                openAPI.addTagsItem(tag);
+                if ((openAPI.getTags() == null) || openAPI.getTags().stream().noneMatch(tag -> tag.getName().equals(tagName))) {
+                    Tag tag = AnnotationParser.parseTag(tagAnnotation);
+                    openAPI.addTagsItem(tag);
+                }
             }
         }
 

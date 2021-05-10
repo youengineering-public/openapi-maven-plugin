@@ -13,6 +13,11 @@ info:
   version: v1
 servers:
   - url: https://www.example.com:8080/api
+tags:
+  - name: myClassTag
+    description: myClassTagDescription
+  - name: myMethodTag
+    description: myMethodTagDescription
 paths:
   /array/primitiveArrayWithoutAnnotations:
     get:
@@ -28,24 +33,6 @@ paths:
                 items:
                   type: integer
                   format: int32
-  /array/objectListWithoutAnnotations:
-    get:
-      operationId: TestArrayController_testObjectListWithoutAnnotations_get
-      responses:
-        "200":
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                uniqueItems: false
-                type: array
-                items:
-                  type: object
-                  properties:
-                    text:
-                      type: string
-                    inner:
-                      $ref: '#/components/schemas/TestInnerResponse'
   /array/boxedArrayWithoutAnnotations:
     get:
       operationId: TestArrayController_testBoxedArrayWithoutAnnotations_get
@@ -60,6 +47,20 @@ paths:
                 items:
                   type: integer
                   format: int32
+  /array/boxedSetWithoutAnnotations:
+    get:
+      operationId: TestArrayController_testBoxedSetWithoutAnnotations_get
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                uniqueItems: true
+                type: array
+                items:
+                  type: number
+                  format: double
   /array/objectSetWithoutAnnotations:
     get:
       operationId: TestArrayController_testObjectSetWithoutAnnotations_get
@@ -78,20 +79,6 @@ paths:
                       type: string
                     inner:
                       $ref: '#/components/schemas/TestInnerResponse'
-  /array/boxedSetWithoutAnnotations:
-    get:
-      operationId: TestArrayController_testBoxedSetWithoutAnnotations_get
-      responses:
-        "200":
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                uniqueItems: true
-                type: array
-                items:
-                  type: number
-                  format: double
   /array/listWithAnnotationApiResponses:
     get:
       operationId: TestArrayController_testListWithAnnotationApiResponses_get
@@ -101,6 +88,42 @@ paths:
           content:
             '*/*':
               schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    text:
+                      type: string
+                    inner:
+                      $ref: '#/components/schemas/TestInnerResponse'
+  /array/objectArrayWithoutAnnotations:
+    get:
+      operationId: TestArrayController_testObjectArrayWithoutAnnotations_get
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                uniqueItems: false
+                type: array
+                items:
+                  type: object
+                  properties:
+                    text:
+                      type: string
+                    inner:
+                      $ref: '#/components/schemas/TestInnerResponse'
+  /array/objectListWithoutAnnotations:
+    get:
+      operationId: TestArrayController_testObjectListWithoutAnnotations_get
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                uniqueItems: false
                 type: array
                 items:
                   type: object
@@ -123,92 +146,6 @@ paths:
                 items:
                   type: number
                   format: float
-  /array/objectArrayWithoutAnnotations:
-    get:
-      operationId: TestArrayController_testObjectArrayWithoutAnnotations_get
-      responses:
-        "200":
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                uniqueItems: false
-                type: array
-                items:
-                  type: object
-                  properties:
-                    text:
-                      type: string
-                    inner:
-                      $ref: '#/components/schemas/TestInnerResponse'
-  /echo/requestParamExpectParamValue:
-    get:
-      operationId: TestEchoController_requestParamExpectParamValue_get
-      parameters:
-        - name: requestParamValue
-          in: query
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                type: string
-      deprecated: false
-  /echo/requestHeaderExpectHeaderName:
-    get:
-      operationId: TestEchoController_requestHeaderExpectHeaderName_get
-      parameters:
-        - name: requestHeaderName
-          in: header
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                type: string
-      deprecated: false
-  /echo/requestHeaderExpectHeaderValue:
-    get:
-      operationId: TestEchoController_requestHeaderExpectHeaderValue_get
-      parameters:
-        - name: requestHeaderValue
-          in: header
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                type: string
-      deprecated: false
-  /echo/pathVariableExpectVariableValue/{pathVariableValue}:
-    get:
-      operationId: TestEchoController_pathVariableExpectVariableValue_get
-      parameters:
-        - name: pathVariableValue
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                type: string
-      deprecated: false
   /echo/pathVariableExpectVariableName/{pathVariableName}:
     get:
       operationId: TestEchoController_pathVariableExpectVariableName_get
@@ -243,23 +180,6 @@ paths:
               schema:
                 type: string
       deprecated: false
-  /echo/pathVariableExpectParameterName/{parameterName}:
-    get:
-      operationId: TestEchoController_pathVariableExpectParameterName_get
-      parameters:
-        - name: parameterName
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                type: string
-      deprecated: false
   /echo/requestHeaderExpectParameterName:
     get:
       operationId: TestEchoController_requestHeaderExpectParameterName_get
@@ -277,12 +197,46 @@ paths:
               schema:
                 type: string
       deprecated: false
-  /echo/cookieValueExpectCookieName:
+  /echo/requestHeaderExpectHeaderValue:
     get:
-      operationId: TestEchoController_cookieValueExpectCookieName_get
+      operationId: TestEchoController_requestHeaderExpectHeaderValue_get
       parameters:
-        - name: cookieValueName
+        - name: requestHeaderValue
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+      deprecated: false
+  /echo/cookieValueExpectParameterName:
+    get:
+      operationId: TestEchoController_cookieValueExpectParameterName_get
+      parameters:
+        - name: parameterName
           in: cookie
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+      deprecated: false
+  /echo/requestHeaderExpectHeaderName:
+    get:
+      operationId: TestEchoController_requestHeaderExpectHeaderName_get
+      parameters:
+        - name: requestHeaderName
+          in: header
           required: true
           schema:
             type: string
@@ -311,11 +265,62 @@ paths:
               schema:
                 type: string
       deprecated: false
-  /echo/cookieValueExpectParameterName:
+  /echo/pathVariableExpectParameterName/{parameterName}:
     get:
-      operationId: TestEchoController_cookieValueExpectParameterName_get
+      operationId: TestEchoController_pathVariableExpectParameterName_get
       parameters:
         - name: parameterName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+      deprecated: false
+  /echo/pathVariableExpectVariableValue/{pathVariableValue}:
+    get:
+      operationId: TestEchoController_pathVariableExpectVariableValue_get
+      parameters:
+        - name: pathVariableValue
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+      deprecated: false
+  /echo/requestParamExpectParamValue:
+    get:
+      operationId: TestEchoController_requestParamExpectParamValue_get
+      parameters:
+        - name: requestParamValue
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+      deprecated: false
+  /echo/cookieValueExpectCookieName:
+    get:
+      operationId: TestEchoController_cookieValueExpectCookieName_get
+      parameters:
+        - name: cookieValueName
           in: cookie
           required: true
           schema:
@@ -345,9 +350,33 @@ paths:
               schema:
                 type: string
       deprecated: false
+  /deprecated/parameterAnnotationJava:
+    post:
+      operationId: TestDeprecated_testDeprecatedParameterAnnotationJava_post
+      parameters:
+        - name: text
+          in: query
+          required: true
+          deprecated: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: string
   /deprecated/operationAnnotationJava:
     post:
       operationId: TestDeprecated_testDeprecatedOperationAnnotationJava_post
+      responses:
+        default:
+          description: Successful operation
+      deprecated: true
+  /deprecated/operationAnnotationOpenAPI:
+    post:
+      operationId: TestDeprecated_testDeprecatedOperationAnnotationOpenAPI_post
       responses:
         default:
           description: Successful operation
@@ -369,30 +398,6 @@ paths:
               schema:
                 type: string
       deprecated: false
-  /deprecated/parameterAnnotationJava:
-    post:
-      operationId: TestDeprecated_testDeprecatedParameterAnnotationJava_post
-      parameters:
-        - name: text
-          in: query
-          required: true
-          deprecated: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                type: string
-  /deprecated/operationAnnotationOpenAPI:
-    post:
-      operationId: TestDeprecated_testDeprecatedOperationAnnotationOpenAPI_post
-      responses:
-        default:
-          description: Successful operation
-      deprecated: true
   /deprecated/parameterAnnotationOpenAPI:
     post:
       operationId: TestDeprecated_testDeprecatedParameterAnnotation_post
@@ -427,6 +432,22 @@ paths:
         default:
           description: Successful operation
       deprecated: false
+  /mapping/get:
+    get:
+      operationId: TestMappingController_testGet_get
+      parameters:
+        - name: myAutoNamedParameter
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: string
   /mapping/post:
     post:
       operationId: TestMappingController_testPost_post
@@ -447,22 +468,6 @@ paths:
                     type: string
                   inner:
                     $ref: '#/components/schemas/TestInnerResponse'
-  /mapping/get:
-    get:
-      operationId: TestMappingController_testGet_get
-      parameters:
-        - name: myAutoNamedParameter
-          in: query
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                type: string
   /nested:
     get:
       summary: Loads nested data
@@ -536,6 +541,31 @@ paths:
                     type: string
                   inner:
                     $ref: '#/components/schemas/TestInnerResponse'
+  /tags/sameTagOnMethodAsOnClassPlusExplicitOne:
+    get:
+      tags:
+        - myClassTag
+        - myMethodTag
+      operationId: TestTags_testSameTagOnMethodAsOnClassPlusExplicitOne_get
+      responses:
+        default:
+          description: Successful operation
+  /tags/sameTagOnMethodAsOnClass:
+    get:
+      tags:
+        - myClassTag
+      operationId: TestTags_testSameTagOnMethodAsOnClass_get
+      responses:
+        default:
+          description: Successful operation
+  /tags/noExplicitTagOnMethod:
+    get:
+      tags:
+        - myClassTag
+      operationId: TestTags_testNoExplicitTagOnMethod_get
+      responses:
+        default:
+          description: Successful operation
 components:
   schemas:
     TestInnerResponse:

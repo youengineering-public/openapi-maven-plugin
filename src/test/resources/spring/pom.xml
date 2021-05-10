@@ -8,7 +8,7 @@
             <plugin>
                 <groupId>com.youengineering</groupId>
                 <artifactId>openapi-maven-plugin</artifactId>
-                <version>0.0.10</version>
+                <version>0.0.11</version>
                 <configuration>
                     <sourcePackage>com.youengineering.openapi.samples.spring</sourcePackage>
                     <framework>spring</framework>
