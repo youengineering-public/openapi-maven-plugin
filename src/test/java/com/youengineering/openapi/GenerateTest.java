@@ -81,9 +81,8 @@ public class GenerateTest extends AbstractMojoTestCase {
     }
 
     private void assetGeneratedFile_Yaml(Framework framework) {
-        OutputFormat yaml = OutputFormat.yaml;
-        OpenAPI actualOpenAPI = openAPIV3Parser.read(getOpenAPIFile(framework, "generated", yaml).getPath());
-        OpenAPI expectedOpenAPI = openAPIV3Parser.read(getOpenAPIFile(framework, "expected", yaml).getPath());
+        OpenAPI actualOpenAPI = openAPIV3Parser.read(getOpenAPIFile(framework, "generated", OutputFormat.yaml).getPath());
+        OpenAPI expectedOpenAPI = openAPIV3Parser.read(getOpenAPIFile(framework, "expected", OutputFormat.yaml).getPath());
         assertOpenApis(actualOpenAPI, expectedOpenAPI);
     }
 
