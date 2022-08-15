@@ -4,7 +4,7 @@
 
     <groupId>com.youengineering</groupId>
     <artifactId>openapi-maven-plugin</artifactId>
-    <version>0.0.11</version>
+    <version>0.1.0</version>
     <packaging>maven-plugin</packaging>
 
     <name>OpenAPI Maven Plugin</name>
@@ -38,22 +38,22 @@
         <version.jaxb-api>2.3.1</version.jaxb-api>
         <version.jaxrs-api>2.1.1</version.jaxrs-api>
         <version.jersey-server>1.19.4</version.jersey-server>
-        <version.lombok>1.18.12</version.lombok>
+        <version.lombok>1.18.24</version.lombok>
         <version.maven-compiler-plugin>3.8.1</version.maven-compiler-plugin>
-        <version.maven-compat>3.6.3</version.maven-compat>
-        <version.maven-core>3.6.3</version.maven-core>
+        <version.maven-compat>3.8.5</version.maven-compat>
+        <version.maven-core>3.8.5</version.maven-core>
         <version.maven-gpg-plugin>1.6</version.maven-gpg-plugin>
         <version.maven-javadoc-plugin>3.2.0</version.maven-javadoc-plugin>
-        <version.maven-plugin-annotations>3.6.0</version.maven-plugin-annotations>
-        <version.maven-plugin-api>3.6.3</version.maven-plugin-api>
+        <version.maven-plugin-annotations>3.6.4</version.maven-plugin-annotations>
+        <version.maven-plugin-api>3.8.5</version.maven-plugin-api>
         <version.maven-plugin-plugin>3.6.0</version.maven-plugin-plugin>
         <version.maven-plugin-testing-harness>3.3.0</version.maven-plugin-testing-harness>
         <version.maven-source-plugin>3.2.1</version.maven-source-plugin>
         <version.nexus-staging-maven-plugin>1.6.8</version.nexus-staging-maven-plugin>
-        <version.spring-web>5.2.5.RELEASE</version.spring-web>
-        <version.swagger-jaxrs2>2.1.1</version.swagger-jaxrs2>
-        <version.swagger-parser-v3>2.0.19</version.swagger-parser-v3>
-        <version.reflections>0.9.11</version.reflections>
+        <version.spring-web>5.3.22</version.spring-web>
+        <version.swagger-jaxrs2>2.2.2</version.swagger-jaxrs2>
+        <version.swagger-parser-v3>2.1.1</version.swagger-parser-v3>
+        <version.reflections>0.10.2</version.reflections>
     </properties>
 
     <dependencies>

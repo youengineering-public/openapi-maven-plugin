@@ -18,6 +18,7 @@ import org.eclipse.aether.DefaultRepositorySystemSession;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class GenerateTest extends AbstractMojoTestCase {
@@ -69,16 +70,51 @@ public class GenerateTest extends AbstractMojoTestCase {
     private void assetGeneratedFile_Json(Framework framework) throws Exception {
         JsonNode actualNode = Json.mapper().readTree(getOpenAPIFile(framework, "generated", OutputFormat.json));
         JsonNode expectedNode = Json.mapper().readTree(getOpenAPIFile(framework, "expected", OutputFormat.json));
-        assertEquals(expectedNode, actualNode);
+
+        // Removing all null attributes as openApi deserializer user node.get("extensions") to get value.
+        // And if any of the vales are null, it is getting treated as "null" (String type) and failing with class cast exception
+        removeNullsFromJsonNode(actualNode);
+        removeNullsFromJsonNode(expectedNode);
+        OpenAPI actualOpenAPI = openAPIV3Parser.parseJsonNode("", actualNode).getOpenAPI();
+        OpenAPI expectedOpenAPI = openAPIV3Parser.parseJsonNode("", expectedNode).getOpenAPI();
+        assertOpenApis(actualOpenAPI, expectedOpenAPI);
     }
 
     private void assetGeneratedFile_Yaml(Framework framework) {
         OpenAPI actualOpenAPI = openAPIV3Parser.read(getOpenAPIFile(framework, "generated", OutputFormat.yaml).getPath());
         OpenAPI expectedOpenAPI = openAPIV3Parser.read(getOpenAPIFile(framework, "expected", OutputFormat.yaml).getPath());
+        assertOpenApis(actualOpenAPI, expectedOpenAPI);
+    }
+
+    private static void assertOpenApis(OpenAPI actualOpenAPI, OpenAPI expectedOpenAPI) {
+        assertNotNull(actualOpenAPI);
+        assertEquals(expectedOpenAPI.getOpenapi(), actualOpenAPI.getOpenapi());
+        assertEquals(expectedOpenAPI.getInfo(), actualOpenAPI.getInfo());
+        assertEquals(expectedOpenAPI.getExternalDocs(), actualOpenAPI.getExternalDocs());
+        assertEquals(expectedOpenAPI.getServers(), actualOpenAPI.getServers());
+        assertEquals(expectedOpenAPI.getSecurity(), actualOpenAPI.getSecurity());
+        assertEquals(expectedOpenAPI.getTags(), actualOpenAPI.getTags());
+        assertEquals(expectedOpenAPI.getComponents(), actualOpenAPI.getComponents());
+        assertEquals(expectedOpenAPI.getExtensions(), actualOpenAPI.getExtensions());
+        assertEquals(expectedOpenAPI.getJsonSchemaDialect(), actualOpenAPI.getJsonSchemaDialect());
+        assertEquals(expectedOpenAPI.getSpecVersion(), actualOpenAPI.getSpecVersion());
+        assertEquals(expectedOpenAPI.getWebhooks(), actualOpenAPI.getWebhooks());
+        assertEquals(expectedOpenAPI.getPaths(), actualOpenAPI.getPaths());
         assertEquals(expectedOpenAPI, actualOpenAPI);
     }
 
     private File getOpenAPIFile(Framework framework, String fileName, OutputFormat outputFormat) {
         return new File(getBasedir(), "src/test/resources/" + framework.name() + "/" + fileName + "." + outputFormat.name());
+    }
+
+    public static void removeNullsFromJsonNode(final JsonNode node) {
+        Iterator<JsonNode> it = node.iterator();
+        while (it.hasNext()) {
+            JsonNode child = it.next();
+            if (child.isNull())
+                it.remove();
+            else
+                removeNullsFromJsonNode(child);
+        }
     }
 }
